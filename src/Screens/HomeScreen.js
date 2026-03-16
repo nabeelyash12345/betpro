@@ -139,7 +139,7 @@ Account: ${account.number}`;
 
       <TouchableOpacity
         style={styles.logoutBtn}
-        onPress={() => navigation.navigate("Login")}
+        onPress={() => navigation.navigate("LoginScreen")}
       >
         <Text style={{ color: "#fff" }}>LOGOUT</Text>
       </TouchableOpacity>
