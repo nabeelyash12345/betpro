@@ -21,9 +21,10 @@ export default function HomeScreen({ navigation }) {
     await logout();
   };
 
+  
   // Mock data – replace with real data later
-  const username = "Zone80390";
-  const password = "Zone80390";
+  const username = userProfile?.bpUsername ?? "N/A";
+  const password = userProfile?.bpPassword ?? "";
 
   const recentTransactions = []; // Empty for now
 

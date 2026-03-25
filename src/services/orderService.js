@@ -20,7 +20,8 @@ export const createOrder = async (userId, orderData) => {
       status: 'pending', // pending, approved, rejected, completed
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-      notes: orderData.notes || ''
+      notes: orderData.notes || '',
+      isDeposit: orderData.isDeposit || false
     };
     
     await set(newOrderRef, order);
