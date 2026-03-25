@@ -220,10 +220,10 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   actionGradient: {
-    flexDirection: 'row',
+  
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 12,
+    paddingVertical: 16,
     gap: 8,
   },
   actionText: {
