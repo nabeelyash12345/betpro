@@ -14,7 +14,7 @@ import { useAuth } from "../context/AuthContext";
 
 const { width } = Dimensions.get("window");
 
-export default function HomeScreen({ navigation }) {
+export default function Deposit({ navigation }) {
   const { user, userProfile, logout } = useAuth();
 
   const handleLogout = async () => {
@@ -34,7 +34,7 @@ export default function HomeScreen({ navigation }) {
      <View style={styles.headerstyles}>
       <View>
         
-      <Text style={styles.headertext}>Betpro Zone</Text>
+   
       </View>
       <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
           <Entypo name="log-out" size={20} color="black" />
@@ -64,9 +64,7 @@ export default function HomeScreen({ navigation }) {
         <View style={styles.actionsSection}>
           <Text style={styles.sectionTitle}>Easy Actions</Text>
           <View style={styles.actionButtons}>
-            <TouchableOpacity style={styles.actionButton}
-            onPress={()=>navigation.navigate("Deposit")}
-            >
+            <TouchableOpacity style={styles.actionButton}>
               <LinearGradient
                 colors={['#10B981', '#059669']}
                 start={{ x: 0, y: 0 }}

@@ -7,6 +7,7 @@ import LoginScreen from '../Screens/LoginScreen';
 import SignupScreen from '../Screens/SignupScreen';
 import HomeInActiveUser from '../Screens/HomeInActiveUser';
 import SplashScreen from '../Screens/Splash';
+import Deposit  from '../Screens/Deposit'
 
 const Stack = createNativeStackNavigator();
 
@@ -35,7 +36,12 @@ export default function RootStack() {
           !userProfile?.isAccepted ? (
             <Stack.Screen name="HomeInActiveUser" component={HomeInActiveUser} />
           ) : (
+            <>
             <Stack.Screen name="Home" component={HomeScreen} />
+            <Stack.Screen name="Deposit" component={Deposit} />
+            
+            </>
+            
           )
         }
         </>
