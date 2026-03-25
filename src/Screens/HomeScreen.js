@@ -1,352 +1,278 @@
-import React, { useState } from "react";
+import React from "react";
 import {
   View,
   Text,
   TouchableOpacity,
   StyleSheet,
-  Modal,
-  Linking,
-
-
+  ScrollView,
+  SafeAreaView,
+  Dimensions,
 } from "react-native";
-import * as Clipboard from "expo-clipboard";
-import { FontAwesome } from "@expo/vector-icons";
+import { Entypo, Ionicons, MaterialIcons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import { useAuth } from "../context/AuthContext";
 
+const { width } = Dimensions.get("window");
+
 export default function HomeScreen({ navigation }) {
-
-  const [selectedTab, setSelectedTab] = useState("BANK");
-  const [modalVisible, setModalVisible] = useState(false);
   const { user, userProfile, logout } = useAuth();
-
- 
-
 
   const handleLogout = async () => {
     await logout();
   };
 
-  const accounts = {
-    BANK: {
-      number: "03451234567",
-      updated: "06 Sep 2023, 04:33 PM"
-    },
-    JAZZCASH: {
-      number: "03001234567",
-      updated: "06 Sep 2023, 04:33 PM"
-    },
-    EASYPAISA: {
-      number: "03111234567",
-      updated: "06 Sep 2023, 04:33 PM"
-    }
-  };
+  // Mock data – replace with real data later
+  const username = "Zone80390";
+  const password = "Zone80390";
 
-  const account = accounts[selectedTab];
-
-  const copyNumber = async () => {
-    await Clipboard.setStringAsync(account.number);
-    alert("Copied!");
-  };
-
-  const sendWhatsapp = () => {
-
-    const message = `Payment Submitted
-
-Method: ${selectedTab}
-Account: ${account.number}`;
-
-    const url = `https://wa.me/+923021810133?text=${encodeURIComponent(message)}`;
-
-    Linking.openURL(url);
-
-    setModalVisible(false);
-  };
+  const recentTransactions = []; // Empty for now
 
   return (
-
-    <View style={styles.container}>
-
-      {/* Tabs */}
-
-      <View style={styles.tabs}>
-
-        <TouchableOpacity
-          style={[styles.tab, selectedTab === "BANK" && styles.activeTab]}
-          onPress={() => setSelectedTab("BANK")}
-        >
-          <Text style={styles.tabText}>BANK</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.tab, selectedTab === "JAZZCASH" && styles.activeTab]}
-          onPress={() => setSelectedTab("JAZZCASH")}
-        >
-          <Text style={styles.tabText}>JAZZCASH</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.tab, selectedTab === "EASYPAISA" && styles.activeTab]}
-          onPress={() => setSelectedTab("EASYPAISA")}
-        >
-          <Text style={styles.tabText}>EASYPAISA</Text>
-        </TouchableOpacity>
-
+    <SafeAreaView style={styles.container}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+      
+     <View style={styles.headerstyles}>
+      <View>
+        
+      <Text style={styles.headertext}>Betpro Zone</Text>
       </View>
+      <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
+          <Entypo name="log-out" size={20} color="black" />
+        </TouchableOpacity>
+     </View>
 
-      {/* Account Info */}
-
-      <View style={styles.infoBox}>
-
-        <Text style={styles.label}>Account Number</Text>
-
-        <View style={styles.row}>
-
-          <Text style={styles.number}>{account.number}</Text>
-
-          <TouchableOpacity style={styles.copyBtn} onPress={copyNumber}>
-            <Text style={{ color: "#fff" }}>COPY</Text>
-          </TouchableOpacity>
-
-        </View>
-
-        <Text style={styles.updated}>
-          Last Updated: {account.updated}
-        </Text>
-
-      </View>
-
-      {/* Submit WhatsApp */}
-
-      <TouchableOpacity
-        style={styles.whatsappBtn}
-        onPress={() => setModalVisible(true)}
-      >
-        <Text style={{ color: "#fff", fontWeight: "bold" }}>
-          SUBMIT TO WHATSAPP
-        </Text>
-      </TouchableOpacity>
-
-      {/* Note */}
-
-      <View style={styles.noteRow}>
-        <FontAwesome name="whatsapp" size={28} />
-        <Text style={styles.noteText}>
-          ⚠ Payment ka screenshot WhatsApp par submit karna zaroori hai.
-          Uske baad hi Login enable hoga.
-        </Text>
-      </View>
-
-      {/* Login Button */}
-
-      <TouchableOpacity style={styles.loginBtn}>
-        <Text style={{ color: "#fff", fontWeight: "bold" }}>
-          LOGIN TO BPEXCH.NET
-        </Text>
-      </TouchableOpacity>
-
-      {/* Logout */}
-
-      <TouchableOpacity
-        style={styles.logoutBtn}
-        onPress={handleLogout}
-      >
-        <Text style={{ color: "#fff" }}>LOGOUT</Text>
-      </TouchableOpacity>
-
-
-      {/* Confirmation Modal */}
-
-      <Modal
-        visible={modalVisible}
-        transparent
-        animationType="fade"
-      >
-
-        <View style={styles.modalBg}>
-
-          <View style={styles.modalBox}>
-
-            <Text style={styles.modalTitle}>
-              Confirm Information
-            </Text>
-
-            <Text>
-              Method: {selectedTab}
-            </Text>
-
-            <Text>
-              Account: {account.number}
-            </Text>
-
-            <View style={styles.modalBtns}>
-
-              <TouchableOpacity
-                style={styles.cancelBtn}
-                onPress={() => setModalVisible(false)}
-              >
-                <Text>Cancel</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.confirmBtn}
-                onPress={sendWhatsapp}
-              >
-                <Text style={{ color: "#fff" }}>Send</Text>
-              </TouchableOpacity>
-
-            </View>
-
+       
+        <View style={styles.userCard}>
+          <View style={{flexDirection:"row", alignItems:'center'}} >
+            <View style={styles.logostyes}>
+          <Text>BP</Text>
           </View>
-
+           <Text style={styles.title}>Betpro Zone</Text>
+        </View>
+         
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>Username:</Text>
+            <Text style={styles.infoValue}>{username}</Text>
+          </View>
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>Password:</Text>
+            <Text style={styles.infoValue}>{password}</Text>
+          </View>
         </View>
 
-      </Modal>
+        {/* Easy Actions */}
+        <View style={styles.actionsSection}>
+          <Text style={styles.sectionTitle}>Easy Actions</Text>
+          <View style={styles.actionButtons}>
+            <TouchableOpacity style={styles.actionButton}>
+              <LinearGradient
+                colors={['#10B981', '#059669']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.actionGradient}
+              >
+                <MaterialIcons name="account-balance-wallet" size={20} color="white" />
+                <Text style={styles.actionText}>Deposit</Text>
+              </LinearGradient>
+            </TouchableOpacity>
 
-    </View>
+            <TouchableOpacity style={styles.actionButton}>
+              <LinearGradient
+                colors={['#EF4444', '#DC2626']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.actionGradient}
+              >
+                <Ionicons name="arrow-down-outline" size={20} color="white" />
+                <Text style={styles.actionText}>Withdrawal</Text>
+              </LinearGradient>
+            </TouchableOpacity>
 
+            <TouchableOpacity style={styles.actionButton}>
+              <LinearGradient
+                colors={['#3B82F6', '#2563EB']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.actionGradient}
+              >
+                <Ionicons name="chatbubble-ellipses-outline" size={20} color="white" />
+                <Text style={styles.actionText}>Support</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Trusted Platform Message */}
+        <View style={styles.trustMessage}>
+          <Text style={styles.trustText}>🔒 The Most Trusted Betting Platform Instar</Text>
+        </View>
+
+        {/* Recent Transactions */}
+        <View style={styles.transactionsSection}>
+          <Text style={styles.sectionTitle}>Recent Transactions</Text>
+          {recentTransactions.length === 0 ? (
+            <View style={styles.emptyState}>
+              <Ionicons name="receipt-outline" size={48} color="#D1D5DB" />
+              <Text style={styles.emptyText}>No transactions found</Text>
+            </View>
+          ) : (
+            // If there are transactions, map them here
+            <></>
+          )}
+        </View>
+
+        {/* Logout Button */}
+        
+
+        <View style={styles.footerSpacer} />
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-
   container: {
     flex: 1,
-    backgroundColor: "#E5E7EB",
+    backgroundColor: '#F9FAFB',
+  },
+  scrollContent: {
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 40,
+  },
+  logostyes:{
+     backgroundColor:"red",
+     height:30,
+     width:30,
+     borderRadius:100,
+     justifyContent:'center',
+     alignItems:'center'
+     
+  },
+  headerstyles:{
+  justifyContent:'space-between',
+  flexDirection:'row',
+  marginTop:20,
+  marginBottom:20
+  },
+  headertext:{
+    fontSize:25
+  },
+  header: {
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  title: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#1F2937',
+    letterSpacing: 1,
+    marginLeft:10
+  },
+  userCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
     padding: 20,
-
-    
+    marginBottom: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
   },
-
-  tabs: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 20,
-    marginTop:40
-  },
-
-  tab: {
-    backgroundColor: "#5A6ACF",
-    padding: 10,
-    borderRadius: 5,
-    flex: 1,
-    marginHorizontal: 3,
-    alignItems: "center"
-  },
-
-  activeTab: {
-    backgroundColor: "#3F51B5"
-  },
-
-  tabText: {
-    color: "#fff",
-    fontWeight: "bold"
-  },
-
-  infoBox: {
-    backgroundColor: "#fff",
-    padding: 15,
-    borderRadius: 6,
-    marginBottom: 20
-  },
-
-  label: {
-    color: "#888"
-  },
-
-  row: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginTop: 8
-  },
-
-  number: {
-    fontSize: 16
-  },
-
-  copyBtn: {
-    backgroundColor: "#1ABC9C",
-    paddingHorizontal: 15,
+  infoRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     paddingVertical: 8,
-    borderRadius: 4
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3F4F6',
   },
-
-  updated: {
-    marginTop: 10,
-    color: "#888"
+  infoLabel: {
+    fontSize: 14,
+    color: '#6B7280',
+    fontWeight: '500',
   },
-
-  whatsappBtn: {
-    backgroundColor: "#2ECC71",
-    padding: 15,
-    borderRadius: 5,
-    alignItems: "center",
-    marginBottom: 20
+  infoValue: {
+    fontSize: 14,
+    color: '#1F2937',
+    fontWeight: '600',
   },
-
-  noteRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 20
+  actionsSection: {
+    marginBottom: 24,
   },
-
-  noteText: {
-    marginLeft: 10,
-    flex: 1
-  },
-
-  loginBtn: {
-    backgroundColor: "#0E9F8E",
-    padding: 15,
-    borderRadius: 5,
-    alignItems: "center",
-    marginBottom: 20
-  },
-
-  logoutBtn: {
-    backgroundColor: "#9C27B0",
-    padding: 12,
-    borderRadius: 5,
-    alignItems: "center",
-    alignSelf: "center",
-    width: 120
-  },
-
-  modalBg: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "rgba(0,0,0,0.4)"
-  },
-
-  modalBox: {
-    backgroundColor: "#fff",
-    padding: 20,
-    borderRadius: 8,
-    width: "80%"
-  },
-
-  modalTitle: {
+  sectionTitle: {
     fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 10
+    fontWeight: '600',
+    color: '#1F2937',
+    marginBottom: 12,
   },
-
-  modalBtns: {
-    flexDirection: "row",
-    justifyContent: "flex-end",
-    marginTop: 15
+  actionButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 12,
   },
-
-  cancelBtn: {
-    marginRight: 15
+  actionButton: {
+    flex: 1,
+    borderRadius: 12,
+    overflow: 'hidden',
   },
-
-  confirmBtn: {
-    backgroundColor: "#2ECC71",
-    paddingHorizontal: 15,
-    paddingVertical: 6,
-    borderRadius: 4
-  }
-
+  actionGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    gap: 8,
+  },
+  actionText: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  trustMessage: {
+    backgroundColor: '#FEF3C7',
+    padding: 14,
+    borderRadius: 12,
+    marginBottom: 24,
+    alignItems: 'center',
+  },
+  trustText: {
+    fontSize: 13,
+    color: '#92400E',
+    fontWeight: '500',
+  },
+  transactionsSection: {
+    marginBottom: 24,
+  },
+  emptyState: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 40,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#F3F4F6',
+  },
+  emptyText: {
+    marginTop: 12,
+    fontSize: 14,
+    color: '#9CA3AF',
+  },
+  logoutBtn: {
+    borderRadius: 12,
+    overflow: 'hidden',
+    marginTop: 8,
+  },
+  logoutGradient: {
+    paddingVertical: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  logoutText: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  footerSpacer: {
+    height: 20,
+  },
 });
