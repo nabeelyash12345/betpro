@@ -11,11 +11,20 @@ import {
 } from "react-native";
 import * as Clipboard from "expo-clipboard";
 import { FontAwesome } from "@expo/vector-icons";
+import { useAuth } from "../context/AuthContext";
 
 export default function HomeScreen({ navigation }) {
 
   const [selectedTab, setSelectedTab] = useState("BANK");
   const [modalVisible, setModalVisible] = useState(false);
+  const { user, userProfile, logout } = useAuth();
+
+ 
+
+
+  const handleLogout = async () => {
+    await logout();
+  };
 
   const accounts = {
     BANK: {
@@ -139,7 +148,7 @@ Account: ${account.number}`;
 
       <TouchableOpacity
         style={styles.logoutBtn}
-        onPress={() => navigation.navigate("LoginScreen")}
+        onPress={handleLogout}
       >
         <Text style={{ color: "#fff" }}>LOGOUT</Text>
       </TouchableOpacity>

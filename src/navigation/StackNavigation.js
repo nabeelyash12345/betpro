@@ -5,11 +5,12 @@ import { useAuth } from '../context/AuthContext';
 import HomeScreen from '../Screens/HomeScreen';
 import LoginScreen from '../Screens/LoginScreen';
 import SignupScreen from '../Screens/SignupScreen';
+import HomeInActiveUser from '../Screens/HomeInActiveUser';
 
 const Stack = createNativeStackNavigator();
 
 export default function RootStack() {
-  const { user, loading } = useAuth();
+  const { user, loading,userProfile } = useAuth();
 
   if (loading) {
     // You can show a loading screen here
@@ -21,12 +22,24 @@ export default function RootStack() {
       {!user ? (
         // Not logged in - show auth screens
         <>
+       
           <Stack.Screen name="LoginScreen" component={LoginScreen} />
+         
+
           <Stack.Screen name="SignupScreen" component={SignupScreen} />
         </>
       ) : (
         // Logged in - show home screen
-        <Stack.Screen name="Home" component={HomeScreen} />
+        <>
+        {
+          !userProfile?.isAccepted ? (
+            <Stack.Screen name="HomeInActiveUser" component={HomeInActiveUser} />
+          ) : (
+            <Stack.Screen name="Home" component={HomeScreen} />
+          )
+        }
+        </>
+      
       )}
     </Stack.Navigator>
   );
