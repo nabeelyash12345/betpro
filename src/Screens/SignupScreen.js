@@ -12,8 +12,10 @@ import {
   KeyboardAvoidingView,
   Platform,
   Animated,
-  Dimensions
+  Dimensions,
+  StatusBar
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons"; // Using Expo vector icons
 import { useAuth } from "../context/AuthContext";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
@@ -34,6 +36,7 @@ export default function SignupScreen({ navigation }) {
   const slideAnim = useRef(new Animated.Value(50)).current;
   const scaleAnim = useRef(new Animated.Value(0.95)).current;
   const buttonScale = useRef(new Animated.Value(1)).current;
+  const backButtonAnim = useRef(new Animated.Value(0)).current;
   
   // Staggered animations for each input
   const inputAnimations = useRef([
@@ -63,6 +66,12 @@ export default function SignupScreen({ navigation }) {
         toValue: 1,
         friction: 8,
         tension: 40,
+        useNativeDriver: true,
+      }),
+      Animated.timing(backButtonAnim, {
+        toValue: 1,
+        duration: 500,
+        delay: 100,
         useNativeDriver: true,
       }),
     ]).start();
@@ -135,6 +144,22 @@ export default function SignupScreen({ navigation }) {
     if (modalType === "success") {
       navigation.replace("LoginScreen");
     }
+  };
+
+  // Handle back button press
+  const handleBackPress = () => {
+    Animated.timing(backButtonAnim, {
+      toValue: 0.8,
+      duration: 100,
+      useNativeDriver: true,
+    }).start(() => {
+      Animated.timing(backButtonAnim, {
+        toValue: 1,
+        duration: 100,
+        useNativeDriver: true,
+      }).start();
+      navigation.goBack();
+    });
   };
 
   const handleSignup = async () => {
@@ -220,278 +245,307 @@ export default function SignupScreen({ navigation }) {
   const confirmScale = useRef(new Animated.Value(1)).current;
 
   return (
-    <KeyboardAvoidingView
-      style={styles.keyboardAvoidingView}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
-    >
-      <ScrollView 
-        contentContainerStyle={styles.scrollContainer}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
+    <>
+      <StatusBar barStyle="dark-content" backgroundColor="#E5E7EB" />
+      <KeyboardAvoidingView
+        style={styles.keyboardAvoidingView}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
       >
-        <Animated.View 
-          style={[
-            styles.container,
-            {
-              opacity: fadeAnim,
-              transform: [
-                { translateY: slideAnim },
-                { scale: scaleAnim }
-              ]
-            }
-          ]}
+        <ScrollView 
+          contentContainerStyle={styles.scrollContainer}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
         >
-          <Animated.Text style={[styles.title, {
-            transform: [{ translateY: slideAnim }],
-            opacity: fadeAnim,
-          }]}>
-            Create Account
-          </Animated.Text>
-
-          {/* Full Name Input */}
-          <Animated.View
+          <Animated.View 
             style={[
-              styles.inputWrapper,
+              styles.container,
               {
-                opacity: inputAnimations[0],
+                opacity: fadeAnim,
                 transform: [
-                  { translateX: inputAnimations[0].interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [-20, 0]
-                  })}
+                  { translateY: slideAnim },
+                  { scale: scaleAnim }
                 ]
               }
             ]}
           >
-            <Animated.View style={{ transform: [{ scale: inputScale }] }}>
-              <TextInput
-                placeholder="Full Name"
-                style={styles.input}
-                value={name}
-                onChangeText={setName}
-                returnKeyType="next"
-                blurOnSubmit={false}
-                onFocus={() => onFocusAnimation(inputScale)}
-                onBlur={() => onBlurAnimation(inputScale)}
-                placeholderTextColor="#9CA3AF"
-              />
-            </Animated.View>
-          </Animated.View>
-
-          {/* Email Input */}
-          <Animated.View
-            style={[
-              styles.inputWrapper,
-              {
-                opacity: inputAnimations[1],
-                transform: [
-                  { translateX: inputAnimations[1].interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [-20, 0]
-                  })}
-                ]
-              }
-            ]}
-          >
-            <Animated.View style={{ transform: [{ scale: emailScale }] }}>
-              <TextInput
-                placeholder="Email"
-                style={styles.input}
-                value={email}
-                onChangeText={setEmail}
-                autoCapitalize="none"
-                keyboardType="email-address"
-                returnKeyType="next"
-                blurOnSubmit={false}
-                onFocus={() => onFocusAnimation(emailScale)}
-                onBlur={() => onBlurAnimation(emailScale)}
-                placeholderTextColor="#9CA3AF"
-              />
-            </Animated.View>
-          </Animated.View>
-
-          {/* Phone Number Input */}
-          <Animated.View
-            style={[
-              styles.inputWrapper,
-              {
-                opacity: inputAnimations[2],
-                transform: [
-                  { translateX: inputAnimations[2].interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [-20, 0]
-                  })}
-                ]
-              }
-            ]}
-          >
-            <Animated.View style={{ transform: [{ scale: phoneScale }] }}>
-              <TextInput
-                placeholder="Phone Number (e.g., 03XXXXXXXXX)"
-                style={styles.input}
-                value={phoneNumber}
-                onChangeText={handlePhoneChange}
-                keyboardType="phone-pad"
-                returnKeyType="next"
-                blurOnSubmit={false}
-                onFocus={() => onFocusAnimation(phoneScale)}
-                onBlur={() => onBlurAnimation(phoneScale)}
-                placeholderTextColor="#9CA3AF"
-              />
-            </Animated.View>
-          </Animated.View>
-
-          {/* Password Input */}
-          <Animated.View
-            style={[
-              styles.inputWrapper,
-              {
-                opacity: inputAnimations[3],
-                transform: [
-                  { translateX: inputAnimations[3].interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [-20, 0]
-                  })}
-                ]
-              }
-            ]}
-          >
-            <Animated.View style={{ transform: [{ scale: passwordScale }] }}>
-              <TextInput
-                placeholder="Password (min 6 characters)"
-                style={styles.input}
-                secureTextEntry
-                value={password}
-                onChangeText={setPassword}
-                returnKeyType="next"
-                blurOnSubmit={false}
-                onFocus={() => onFocusAnimation(passwordScale)}
-                onBlur={() => onBlurAnimation(passwordScale)}
-                placeholderTextColor="#9CA3AF"
-              />
-            </Animated.View>
-          </Animated.View>
-
-          {/* Confirm Password Input */}
-          <Animated.View
-            style={[
-              styles.inputWrapper,
-              {
-                opacity: inputAnimations[4],
-                transform: [
-                  { translateX: inputAnimations[4].interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [-20, 0]
-                  })}
-                ]
-              }
-            ]}
-          >
-            <Animated.View style={{ transform: [{ scale: confirmScale }] }}>
-              <TextInput
-                placeholder="Confirm Password"
-                style={styles.input}
-                secureTextEntry
-                value={confirmPassword}
-                onChangeText={setConfirmPassword}
-                returnKeyType="done"
-                onFocus={() => onFocusAnimation(confirmScale)}
-                onBlur={() => onBlurAnimation(confirmScale)}
-                placeholderTextColor="#9CA3AF"
-              />
-            </Animated.View>
-          </Animated.View>
-
-          {/* Sign Up Button */}
-          <Animated.View style={{ transform: [{ scale: buttonScale }] }}>
-            <TouchableOpacity 
-              style={styles.button} 
-              onPress={handleSignup}
-              disabled={loading}
-              activeOpacity={0.8}
+            {/* Back Button */}
+            <Animated.View 
+              style={[
+                styles.backButtonContainer,
+                {
+                  opacity: backButtonAnim,
+                  transform: [
+                    {
+                      translateX: backButtonAnim.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [-50, 0]
+                      })
+                    }
+                  ]
+                }
+              ]}
             >
-              {loading ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <Text style={styles.buttonText}>SIGN UP</Text>
-              )}
-            </TouchableOpacity>
-          </Animated.View>
-
-          {/* Login Link */}
-          <Animated.View
-            style={[
-              styles.loginLink,
-              {
-                opacity: inputAnimations[4],
-                transform: [
-                  { translateY: inputAnimations[4].interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [20, 0]
-                  })}
-                ]
-              }
-            ]}
-          >
-            <TouchableOpacity 
-              onPress={() => navigation.navigate("LoginScreen")}
-              activeOpacity={0.6}
-            >
-              <Text style={styles.loginText}>
-                Already have an account? Login
-              </Text>
-            </TouchableOpacity>
-          </Animated.View>
-
-          {/* Custom Modal */}
-          <Modal
-            transparent={true}
-            visible={modalVisible}
-            animationType="fade"
-            onRequestClose={handleModalClose}
-          >
-            <View style={styles.modalContainer}>
-              <Animated.View 
-                style={[
-                  styles.modalBox,
-                  modalType === "success" ? styles.successModalBox : styles.errorModalBox,
-                  {
-                    transform: [{ scale: scaleAnim }],
-                    opacity: fadeAnim
-                  }
-                ]}
+              <TouchableOpacity 
+                onPress={handleBackPress} 
+                style={styles.backButton}
+                activeOpacity={0.7}
               >
-                {/* Icon based on modal type */}
-                <View style={styles.modalIconContainer}>
-                  <Text style={modalType === "success" ? styles.successIcon : styles.errorIcon}>
-                    {modalType === "success" ? "✓" : "✗"}
-                  </Text>
-                </View>
-                
-                <Text style={[
-                  styles.modalText,
-                  modalType === "success" ? styles.successText : styles.errorText
-                ]}>
-                  {modalMessage}
-                </Text>
-                
-                <TouchableOpacity
-                  style={[
-                    styles.modalButton,
-                    modalType === "success" ? styles.successButton : styles.errorButton
-                  ]}
-                  onPress={handleModalClose}
-                  activeOpacity={0.8}
-                >
-                  <Text style={styles.modalButtonText}>OK</Text>
-                </TouchableOpacity>
+                <Ionicons name="arrow-back" size={24} color="#374151" />
+              </TouchableOpacity>
+            </Animated.View>
+
+            <Animated.Text style={[styles.title, {
+              transform: [{ translateY: slideAnim }],
+              opacity: fadeAnim,
+            }]}>
+              Create Account
+            </Animated.Text>
+
+            {/* Full Name Input */}
+            <Animated.View
+              style={[
+                styles.inputWrapper,
+                {
+                  opacity: inputAnimations[0],
+                  transform: [
+                    { translateX: inputAnimations[0].interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [-20, 0]
+                    })}
+                  ]
+                }
+              ]}
+            >
+              <Animated.View style={{ transform: [{ scale: inputScale }] }}>
+                <TextInput
+                  placeholder="Full Name"
+                  style={styles.input}
+                  value={name}
+                  onChangeText={setName}
+                  returnKeyType="next"
+                  blurOnSubmit={false}
+                  onFocus={() => onFocusAnimation(inputScale)}
+                  onBlur={() => onBlurAnimation(inputScale)}
+                  placeholderTextColor="#9CA3AF"
+                />
               </Animated.View>
-            </View>
-          </Modal>
-        </Animated.View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+            </Animated.View>
+
+            {/* Email Input */}
+            <Animated.View
+              style={[
+                styles.inputWrapper,
+                {
+                  opacity: inputAnimations[1],
+                  transform: [
+                    { translateX: inputAnimations[1].interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [-20, 0]
+                    })}
+                  ]
+                }
+              ]}
+            >
+              <Animated.View style={{ transform: [{ scale: emailScale }] }}>
+                <TextInput
+                  placeholder="Email"
+                  style={styles.input}
+                  value={email}
+                  onChangeText={setEmail}
+                  autoCapitalize="none"
+                  keyboardType="email-address"
+                  returnKeyType="next"
+                  blurOnSubmit={false}
+                  onFocus={() => onFocusAnimation(emailScale)}
+                  onBlur={() => onBlurAnimation(emailScale)}
+                  placeholderTextColor="#9CA3AF"
+                />
+              </Animated.View>
+            </Animated.View>
+
+            {/* Phone Number Input */}
+            <Animated.View
+              style={[
+                styles.inputWrapper,
+                {
+                  opacity: inputAnimations[2],
+                  transform: [
+                    { translateX: inputAnimations[2].interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [-20, 0]
+                    })}
+                  ]
+                }
+              ]}
+            >
+              <Animated.View style={{ transform: [{ scale: phoneScale }] }}>
+                <TextInput
+                  placeholder="Phone Number (e.g., 03XXXXXXXXX)"
+                  style={styles.input}
+                  value={phoneNumber}
+                  onChangeText={handlePhoneChange}
+                  keyboardType="phone-pad"
+                  returnKeyType="next"
+                  blurOnSubmit={false}
+                  onFocus={() => onFocusAnimation(phoneScale)}
+                  onBlur={() => onBlurAnimation(phoneScale)}
+                  placeholderTextColor="#9CA3AF"
+                />
+              </Animated.View>
+            </Animated.View>
+
+            {/* Password Input */}
+            <Animated.View
+              style={[
+                styles.inputWrapper,
+                {
+                  opacity: inputAnimations[3],
+                  transform: [
+                    { translateX: inputAnimations[3].interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [-20, 0]
+                    })}
+                  ]
+                }
+              ]}
+            >
+              <Animated.View style={{ transform: [{ scale: passwordScale }] }}>
+                <TextInput
+                  placeholder="Password (min 6 characters)"
+                  style={styles.input}
+                  secureTextEntry
+                  value={password}
+                  onChangeText={setPassword}
+                  returnKeyType="next"
+                  blurOnSubmit={false}
+                  onFocus={() => onFocusAnimation(passwordScale)}
+                  onBlur={() => onBlurAnimation(passwordScale)}
+                  placeholderTextColor="#9CA3AF"
+                />
+              </Animated.View>
+            </Animated.View>
+
+            {/* Confirm Password Input */}
+            <Animated.View
+              style={[
+                styles.inputWrapper,
+                {
+                  opacity: inputAnimations[4],
+                  transform: [
+                    { translateX: inputAnimations[4].interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [-20, 0]
+                    })}
+                  ]
+                }
+              ]}
+            >
+              <Animated.View style={{ transform: [{ scale: confirmScale }] }}>
+                <TextInput
+                  placeholder="Confirm Password"
+                  style={styles.input}
+                  secureTextEntry
+                  value={confirmPassword}
+                  onChangeText={setConfirmPassword}
+                  returnKeyType="done"
+                  onFocus={() => onFocusAnimation(confirmScale)}
+                  onBlur={() => onBlurAnimation(confirmScale)}
+                  placeholderTextColor="#9CA3AF"
+                />
+              </Animated.View>
+            </Animated.View>
+
+            {/* Sign Up Button */}
+            <Animated.View style={{ transform: [{ scale: buttonScale }] }}>
+              <TouchableOpacity 
+                style={styles.button} 
+                onPress={handleSignup}
+                disabled={loading}
+                activeOpacity={0.8}
+              >
+                {loading ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <Text style={styles.buttonText}>SIGN UP</Text>
+                )}
+              </TouchableOpacity>
+            </Animated.View>
+
+            {/* Login Link */}
+            <Animated.View
+              style={[
+                styles.loginLink,
+                {
+                  opacity: inputAnimations[4],
+                  transform: [
+                    { translateY: inputAnimations[4].interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [20, 0]
+                    })}
+                  ]
+                }
+              ]}
+            >
+              <TouchableOpacity 
+                onPress={() => navigation.navigate("LoginScreen")}
+                activeOpacity={0.6}
+              >
+                <Text style={styles.loginText}>
+                  Already have an account? Login
+                </Text>
+              </TouchableOpacity>
+            </Animated.View>
+
+            {/* Custom Modal */}
+            <Modal
+              transparent={true}
+              visible={modalVisible}
+              animationType="fade"
+              onRequestClose={handleModalClose}
+            >
+              <View style={styles.modalContainer}>
+                <Animated.View 
+                  style={[
+                    styles.modalBox,
+                    modalType === "success" ? styles.successModalBox : styles.errorModalBox,
+                    {
+                      transform: [{ scale: scaleAnim }],
+                      opacity: fadeAnim
+                    }
+                  ]}
+                >
+                  {/* Icon based on modal type */}
+                  <View style={styles.modalIconContainer}>
+                    <Text style={modalType === "success" ? styles.successIcon : styles.errorIcon}>
+                      {modalType === "success" ? "✓" : "✗"}
+                    </Text>
+                  </View>
+                  
+                  <Text style={[
+                    styles.modalText,
+                    modalType === "success" ? styles.successText : styles.errorText
+                  ]}>
+                    {modalMessage}
+                  </Text>
+                  
+                  <TouchableOpacity
+                    style={[
+                      styles.modalButton,
+                      modalType === "success" ? styles.successButton : styles.errorButton
+                    ]}
+                    onPress={handleModalClose}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={styles.modalButtonText}>OK</Text>
+                  </TouchableOpacity>
+                </Animated.View>
+              </View>
+            </Modal>
+          </Animated.View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </>
   );
 }
 
@@ -506,7 +560,31 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#E5E7EB",
     justifyContent: "center",
-    padding: 25
+    padding: 25,
+    paddingTop: 60,
+  },
+  backButtonContainer: {
+    position: "absolute",
+    top: 20,
+    left: 20,
+    zIndex: 10,
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    marginTop:20,
+    backgroundColor: "rgba(255, 255, 255, 0.9)",
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 3,
   },
   title: {
     fontSize: 28,
