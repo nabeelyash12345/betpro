@@ -605,14 +605,14 @@ const styles = StyleSheet.create({
     borderColor: "#E5E7EB",
     fontSize: 16,
     color: "#1F2937",
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 2,
+    // shadowColor: "#000",
+    // shadowOffset: {
+    //   width: 0,
+    //   height: 1,
+    // },
+    // shadowOpacity: 0.05,
+    // shadowRadius: 2,
+    // elevation: 2,
   },
   button: {
     backgroundColor: "#9C27B0",
