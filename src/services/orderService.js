@@ -1,6 +1,7 @@
 // src/services/orderService.js
-import { database } from '../config/firebase';
+
 import { ref, push, set, get, update, query, orderByChild, equalTo, onValue } from 'firebase/database';
+import { database } from '../../firebase';
 
 // Create a new order
 export const createOrder = async (userId, orderData) => {

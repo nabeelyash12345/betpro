@@ -1,3 +1,4 @@
+// src/Screens/Withdraw.js
 import React, { useState } from "react";
 import {
   View,
@@ -8,18 +9,51 @@ import {
   SafeAreaView,
   TextInput,
   Alert,
+  ActivityIndicator,
 } from "react-native";
 import { Entypo, Ionicons, MaterialIcons, FontAwesome5 } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import { useAuth } from "../context/AuthContext";
+import { createOrder } from "../services/orderService";
 
 export default function Withdraw({ navigation }) {
-  const [selectedMethod, setSelectedMethod] = useState("easypaisa"); // easypaisa, jazzcash, bank
+  const { user, userProfile } = useAuth();
+  const [selectedMethod, setSelectedMethod] = useState("easypaisa");
   const [accountHolder, setAccountHolder] = useState("");
   const [mobileNumber, setMobileNumber] = useState("");
   const [bankName, setBankName] = useState("");
   const [bankAccountNumber, setBankAccountNumber] = useState("");
   const [amount, setAmount] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [notes, setNotes] = useState("");
+
+  // Map method names to match order service
+  const getPaymentMethod = () => {
+    switch(selectedMethod) {
+      case "easypaisa":
+        return "EASYPAISA";
+      case "jazzcash":
+        return "JAZZCASH";
+      case "bank":
+        return "BANK";
+      default:
+        return "BANK";
+    }
+  };
+
+  // Get account number based on method
+  const getAccountNumber = () => {
+    switch(selectedMethod) {
+      case "easypaisa":
+        return mobileNumber;
+      case "jazzcash":
+        return mobileNumber;
+      case "bank":
+        return bankAccountNumber;
+      default:
+        return "";
+    }
+  };
 
   const handleSubmit = async () => {
     // Validation
@@ -27,6 +61,7 @@ export default function Withdraw({ navigation }) {
       Alert.alert("Error", "Please enter account holder name");
       return;
     }
+
     if (selectedMethod === "easypaisa" || selectedMethod === "jazzcash") {
       if (!mobileNumber.trim() || mobileNumber.length < 10) {
         Alert.alert("Error", "Please enter a valid mobile number");
@@ -42,22 +77,68 @@ export default function Withdraw({ navigation }) {
         return;
       }
     }
+
     const numAmount = parseFloat(amount);
     if (isNaN(numAmount) || numAmount < 500) {
       Alert.alert("Error", "Amount must be at least PKR 500");
       return;
     }
 
+    if (!user) {
+      Alert.alert("Error", "You must be logged in to withdraw");
+      return;
+    }
+
     setSubmitting(true);
-    // Simulate API call
-    setTimeout(() => {
-      setSubmitting(false);
+
+    // Prepare withdrawal note
+    let withdrawalNote = `Withdrawal Request\n`;
+    withdrawalNote += `Account Holder: ${accountHolder}\n`;
+    withdrawalNote += `Method: ${selectedMethod.toUpperCase()}\n`;
+    
+    if (selectedMethod === "easypaisa" || selectedMethod === "jazzcash") {
+      withdrawalNote += `Mobile Number: ${mobileNumber}\n`;
+    } else {
+      withdrawalNote += `Bank: ${bankName}\n`;
+      withdrawalNote += `Account Number: ${bankAccountNumber}\n`;
+    }
+    withdrawalNote += `Amount: PKR ${numAmount}\n`;
+    withdrawalNote += `User: ${user.email}\n`;
+    withdrawalNote += notes ? `Additional Notes: ${notes}\n` : '';
+
+    // Create order in database
+    const orderData = {
+      type: getPaymentMethod(),
+      amount: numAmount,
+      accountNumber: getAccountNumber(),
+      paymentMethod: getPaymentMethod(),
+      notes: withdrawalNote,
+      isDeposit: false, // false for withdrawal
+      status: 'pending'
+    };
+
+    const result = await createOrder(user.uid, orderData);
+
+    setSubmitting(false);
+
+    if (result.success) {
       Alert.alert(
-        "Success",
-        "Withdrawal request submitted successfully. Funds will be transferred within 30 minutes.",
-        [{ text: "OK", onPress: () => navigation.goBack() }]
+        "Withdrawal Request Submitted",
+        `Your withdrawal request #${result.order.orderNumber} has been submitted successfully.\n\nAmount: PKR ${numAmount}\nMethod: ${selectedMethod.toUpperCase()}\n\nFunds will be transferred within 30 minutes after approval.`,
+        [
+          { 
+            text: "View Orders", 
+            onPress: () => navigation.navigate("Orders") 
+          },
+          { 
+            text: "OK", 
+            onPress: () => navigation.goBack() 
+          }
+        ]
       );
-    }, 1500);
+    } else {
+      Alert.alert("Error", "Failed to submit withdrawal request: " + result.error);
+    }
   };
 
   return (
@@ -187,6 +268,16 @@ export default function Withdraw({ navigation }) {
             value={amount}
             onChangeText={setAmount}
           />
+
+          <Text style={styles.inputLabel}>Additional Notes (Optional)</Text>
+          <TextInput
+            style={[styles.input, styles.textArea]}
+            placeholder="Any additional information..."
+            value={notes}
+            onChangeText={setNotes}
+            multiline
+            numberOfLines={3}
+          />
         </View>
 
         {/* Submit Button */}
@@ -197,13 +288,15 @@ export default function Withdraw({ navigation }) {
             end={{ x: 1, y: 0 }}
             style={styles.submitGradient}
           >
-            <Text style={styles.submitText}>
-              {submitting ? "Submitting..." : "Submit Withdrawal Request"}
-            </Text>
+            {submitting ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.submitText}>Submit Withdrawal Request</Text>
+            )}
           </LinearGradient>
         </TouchableOpacity>
 
-        {/* EasyPaisa Logo Placeholder (if needed) */}
+        {/* EasyPaisa Logo Placeholder */}
         <View style={styles.logoContainer}>
           <FontAwesome5 name="mobile-alt" size={24} color="#10B981" />
           <Text style={styles.logoText}>EasyPaisa • JazzCash • Bank</Text>
@@ -228,7 +321,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     marginBottom: 24,
-    marginTop:20
+    marginTop: 20
   },
   backButton: {
     padding: 8,
@@ -341,6 +434,10 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginBottom: 16,
     backgroundColor: '#FFFFFF',
+  },
+  textArea: {
+    height: 80,
+    textAlignVertical: 'top',
   },
   submitButton: {
     borderRadius: 12,
