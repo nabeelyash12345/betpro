@@ -6,15 +6,15 @@ import HomeScreen from '../Screens/HomeScreen';
 import LoginScreen from '../Screens/LoginScreen';
 import SignupScreen from '../Screens/SignupScreen';
 import HomeInActiveUser from '../Screens/HomeInActiveUser';
+import SplashScreen from '../Screens/Splash';
 
 const Stack = createNativeStackNavigator();
 
 export default function RootStack() {
   const { user, loading,userProfile } = useAuth();
 
-  if (loading) {
-    // You can show a loading screen here
-    return null;
+   if (loading || (user && !userProfile)) {
+    return <SplashScreen />;
   }
 
   return (
