@@ -13,12 +13,18 @@ import {
   KeyboardAvoidingView,
   Platform,
   TouchableWithoutFeedback,
-  Keyboard
+  Keyboard,
+  Image,
+  Modal,
+  Dimensions
 } from "react-native";
 import { Entypo, Ionicons, MaterialIcons, FontAwesome5 } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import * as ImagePicker from 'expo-image-picker';
 import { useAuth } from "../context/AuthContext";
 import { createOrder } from "../services/orderService";
+
+const { width } = Dimensions.get('window');
 
 export default function Withdraw({ navigation }) {
   const { user, userProfile } = useAuth();
@@ -30,6 +36,67 @@ export default function Withdraw({ navigation }) {
   const [amount, setAmount] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [notes, setNotes] = useState("");
+  const [screenshot, setScreenshot] = useState(null);
+  const [showImageModal, setShowImageModal] = useState(false);
+  const [imageError, setImageError] = useState(false);
+
+  // Request permission and pick image
+  const pickImage = async () => {
+    try {
+      // Request permission
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      
+      if (status !== 'granted') {
+        Alert.alert('Permission Needed', 'Sorry, we need camera roll permissions to upload screenshots!');
+        return;
+      }
+
+      // Launch image picker
+      let result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        quality: 0.8,
+        allowsEditing: false,
+        base64: true,
+      });
+
+      console.log('Image picker result:', result);
+
+      if (!result.canceled && result.assets && result.assets[0]) {
+        const imageUri = result.assets[0].uri;
+        const base64Data = result.assets[0].base64;
+        
+        console.log('Image URI:', imageUri);
+        console.log('Base64 length:', base64Data ? base64Data.length : 0);
+        
+        // Generate data URL from the image
+        const dataUrl = base64Data ? `data:image/jpeg;base64,${base64Data}` : null;
+        
+        setScreenshot({
+          uri: imageUri,
+          dataUrl: dataUrl,
+          base64: base64Data
+        });
+        setImageError(false);
+      } else {
+        console.log('Image selection cancelled or no image data');
+      }
+    } catch (error) {
+      console.error('Error picking image:', error);
+      Alert.alert('Error', 'Failed to pick image: ' + error.message);
+    }
+  };
+
+  // Remove selected image
+  const removeImage = () => {
+    setScreenshot(null);
+    setImageError(false);
+  };
+
+  // Handle image loading error
+  const handleImageError = (error) => {
+    console.error('Image loading error:', error);
+    setImageError(true);
+  };
 
   // Map method names to match order service
   const getPaymentMethod = () => {
@@ -110,15 +177,16 @@ export default function Withdraw({ navigation }) {
     withdrawalNote += `User: ${user.email}\n`;
     withdrawalNote += notes ? `Additional Notes: ${notes}\n` : '';
 
-    // Create order in database
+    // Create order in database with screenshot URL
     const orderData = {
       type: getPaymentMethod(),
       amount: numAmount,
       accountNumber: getAccountNumber(),
       paymentMethod: getPaymentMethod(),
       notes: withdrawalNote,
-      isDeposit: false, // false for withdrawal
-      status: 'pending'
+      isDeposit: false,
+      status: 'pending',
+      screenshot: screenshot ? screenshot.dataUrl : null
     };
 
     const result = await createOrder(user.uid, orderData);
@@ -283,6 +351,35 @@ export default function Withdraw({ navigation }) {
                 onChangeText={setAmount}
               />
 
+              <Text style={styles.inputLabel}>Payment Screenshot (Optional)</Text>
+              <TouchableOpacity style={styles.imagePickerButton} onPress={pickImage}>
+                <FontAwesome5 name="camera" size={20} color="#10B981" />
+                <Text style={styles.imagePickerText}>
+                  {screenshot ? 'Change Screenshot' : 'Upload Payment Screenshot'}
+                </Text>
+              </TouchableOpacity>
+
+              {screenshot && (
+                <View style={styles.imagePreviewContainer}>
+                  <TouchableOpacity onPress={() => setShowImageModal(true)}>
+                    <Image 
+                      source={{ uri: screenshot.uri }} 
+                      style={styles.imagePreview}
+                      resizeMode="cover"
+                      onError={handleImageError}
+                    />
+                  </TouchableOpacity>
+                  {imageError && (
+                    <View style={styles.imageErrorContainer}>
+                      <Text style={styles.imageErrorText}>Failed to load image</Text>
+                    </View>
+                  )}
+                  <TouchableOpacity style={styles.removeImageButton} onPress={removeImage}>
+                    <Ionicons name="close-circle" size={24} color="#EF4444" />
+                  </TouchableOpacity>
+                </View>
+              )}
+
               <Text style={styles.inputLabel}>Additional Notes (Optional)</Text>
               <TextInput
                 style={[styles.input, styles.textArea]}
@@ -318,6 +415,29 @@ export default function Withdraw({ navigation }) {
           </ScrollView>
         </SafeAreaView>
       </TouchableWithoutFeedback>
+
+      {/* Image Modal for Full Screen Preview */}
+      <Modal
+        visible={showImageModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowImageModal(false)}
+      >
+        <TouchableOpacity 
+          style={styles.modalContainer}
+          activeOpacity={1}
+          onPress={() => setShowImageModal(false)}
+        >
+          {screenshot && !imageError && (
+            <Image 
+              source={{ uri: screenshot.uri }} 
+              style={styles.modalImage} 
+              resizeMode="contain"
+              onError={handleImageError}
+            />
+          )}
+        </TouchableOpacity>
+      </Modal>
     </KeyboardAvoidingView>
   );
 }
@@ -457,6 +577,68 @@ const styles = StyleSheet.create({
   textArea: {
     height: 80,
     textAlignVertical: 'top',
+  },
+  imagePickerButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: '#F3F4F6',
+    paddingVertical: 12,
+    borderRadius: 10,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    borderStyle: 'dashed',
+  },
+  imagePickerText: {
+    fontSize: 14,
+    color: '#10B981',
+    fontWeight: '500',
+  },
+  imagePreviewContainer: {
+    position: 'relative',
+    marginBottom: 16,
+    alignItems: 'center',
+  },
+  imagePreview: {
+    width: width - 72,
+    height: 200,
+    borderRadius: 10,
+    backgroundColor: '#F3F4F6',
+  },
+  imageErrorContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: '#F3F4F6',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 10,
+  },
+  imageErrorText: {
+    color: '#EF4444',
+    fontSize: 12,
+  },
+  removeImageButton: {
+    position: 'absolute',
+    top: -10,
+    right: -10,
+    backgroundColor: 'white',
+    borderRadius: 12,
+    padding: 2,
+  },
+  modalContainer: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.9)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalImage: {
+    width: width,
+    height: '100%',
   },
   submitButton: {
     borderRadius: 12,

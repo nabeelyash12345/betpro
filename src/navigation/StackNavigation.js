@@ -8,6 +8,7 @@ import SignupScreen from '../Screens/SignupScreen';
 import HomeInActiveUser from '../Screens/HomeInActiveUser';
 import SplashScreen from '../Screens/Splash';
 import Deposit  from '../Screens/Deposit'
+import TabNavigation from './Tabnavigation';
 
 const Stack = createNativeStackNavigator();
 
@@ -37,7 +38,8 @@ export default function RootStack() {
             <Stack.Screen name="HomeInActiveUser" component={HomeInActiveUser} />
           ) : (
             <>
-            <Stack.Screen name="Home" component={HomeScreen} />
+            <Stack.Screen name="TabNavigation" component={TabNavigation} />
+            
             <Stack.Screen name="Deposit" component={Deposit} />
             
             </>

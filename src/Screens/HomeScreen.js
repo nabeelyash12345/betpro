@@ -69,7 +69,7 @@ export default function HomeScreen({ navigation }) {
   const getStatusIcon = (status) => {
     switch (status) {
       case 'pending':
-        return 'clock-o';
+        return 'question-circle';
       case 'approved':
         return 'check-circle';
       case 'rejected':
@@ -101,7 +101,7 @@ export default function HomeScreen({ navigation }) {
     const now = new Date();
     const diffTime = Math.abs(now - date);
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
+
     if (diffDays === 0) {
       return `Today at ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
     } else if (diffDays === 1) {
@@ -128,8 +128,8 @@ export default function HomeScreen({ navigation }) {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView 
-        showsVerticalScrollIndicator={false} 
+      <ScrollView
+        showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
@@ -145,13 +145,13 @@ export default function HomeScreen({ navigation }) {
         </View>
 
         <View style={styles.userCard}>
-          <View style={{flexDirection: "row", alignItems: 'center'}} >
+          <View style={{ flexDirection: "row", alignItems: 'center' }} >
             <View style={styles.logostyes}>
-              <Text style={{color: '#fff', fontWeight: 'bold'}}>BP</Text>
+              <Text style={{ color: '#fff', fontWeight: 'bold' }}>BP</Text>
             </View>
             <Text style={styles.title}>Betpro Zone</Text>
           </View>
-         
+
           <View style={styles.infoRow}>
             <Text style={styles.infoLabel}>Username:</Text>
             <Text style={styles.infoValue}>{username}</Text>
@@ -166,7 +166,7 @@ export default function HomeScreen({ navigation }) {
         <View style={styles.actionsSection}>
           <Text style={styles.sectionTitle}>Easy Actions</Text>
           <View style={styles.actionButtons}>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.actionButton}
               onPress={() => navigation.navigate("Deposit")}
             >
@@ -181,7 +181,7 @@ export default function HomeScreen({ navigation }) {
               </LinearGradient>
             </TouchableOpacity>
 
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.actionButton}
               onPress={() => navigation.navigate("Withdraw")}
             >
@@ -211,12 +211,12 @@ export default function HomeScreen({ navigation }) {
         </View>
 
         {/* Trusted Platform Message */}
-        <View style={styles.trustMessage}>
+        {/* <View style={styles.trustMessage}>
           <Text style={styles.trustText}>🔒 The Most Trusted Betting Platform Instar</Text>
-        </View>
+        </View> */}
 
         {/* Recent Orders Section */}
-        <View style={styles.transactionsSection}>
+        {/* <View style={styles.transactionsSection}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Recent Orders</Text>
             {orders.length > 0 && (
@@ -286,6 +286,12 @@ export default function HomeScreen({ navigation }) {
               })}
             </View>
           )}
+        </View> */}
+
+        <View style={styles.transactionsSection}>
+          <TouchableOpacity style={styles.trustMessage}>
+            <Text style={styles.trustText}>Our Service</Text>
+          </TouchableOpacity>
         </View>
 
         <View style={styles.footerSpacer} />
