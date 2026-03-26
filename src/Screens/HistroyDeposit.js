@@ -259,14 +259,7 @@ const HistoryDeposit = ({ navigation }) => {
           ListEmptyComponent={renderEmptyState}
           contentContainerStyle={deposits.length > 0 ? styles.listContent : styles.emptyListContent}
           showsVerticalScrollIndicator={false}
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={onRefresh}
-              colors={['#10B981']}
-              tintColor="#10B981"
-            />
-          }
+         
         />
       )}
     </View>
