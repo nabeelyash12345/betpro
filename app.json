@@ -13,7 +13,7 @@
     },
     "ios": {
       "supportsTablet": true,
-        "package": "com.betpro.myfirebaseapp" 
+      "package": "com.betpro.myfirebaseapp"
     },
     "android": {
       "adaptiveIcon": {
@@ -22,11 +22,15 @@
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-     "package": "com.betpro.myfirebaseapp" 
+      "package": "com.betpro.myfirebaseapp"
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "53cb2480-a6f2-4ede-8e68-619af1045db6"
+      }
     }
-    
   }
 }
