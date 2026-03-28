@@ -1,5 +1,5 @@
 // src/Screens/HomeScreen.js
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -9,20 +9,30 @@ import {
   SafeAreaView,
   Dimensions,
   RefreshControl,
-  ActivityIndicator
+  ActivityIndicator,
+  Modal,
+  Animated,
+  Alert
 } from "react-native";
 import { Entypo, Ionicons, MaterialIcons, FontAwesome5 } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useAuth } from "../context/AuthContext";
 import { getUserOrders, listenToUserOrders } from "../services/orderService";
 
-const { width } = Dimensions.get("window");
+const { width, height } = Dimensions.get("window");
 
 export default function HomeScreen({ navigation }) {
   const { user, userProfile, logout } = useAuth();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [menuVisible, setMenuVisible] = useState(false);
+  const [logoutLoading, setLogoutLoading] = useState(false);
+  
+  // Animation values
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(300)).current;
+  const overlayAnim = useRef(new Animated.Value(0)).current;
 
   const username = userProfile?.bpUsername ?? "N/A";
   const password = userProfile?.bpPassword ?? "";
@@ -47,8 +57,84 @@ export default function HomeScreen({ navigation }) {
     // Listener will automatically update
   };
 
+  const openMenu = () => {
+    setMenuVisible(true);
+    Animated.parallel([
+      Animated.timing(overlayAnim, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
+
+  const closeMenu = () => {
+    Animated.parallel([
+      Animated.timing(overlayAnim, {
+        toValue: 0,
+        duration: 250,
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 300,
+        duration: 250,
+        useNativeDriver: true,
+      }),
+      Animated.timing(fadeAnim, {
+        toValue: 0,
+        duration: 250,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      setMenuVisible(false);
+    });
+  };
+
+  const handleChangePassword = () => {
+    closeMenu();
+    // Navigate to change password screen
+    navigation.navigate("ChangePasswordScreen");
+  };
+
   const handleLogout = async () => {
-    await logout();
+    closeMenu();
+    // Show confirmation dialog
+    Alert.alert(
+      "Logout",
+      "Are you sure you want to logout?",
+      [
+        {
+          text: "Cancel",
+          style: "cancel"
+        },
+        {
+          text: "Logout",
+          style: "destructive",
+          onPress: async () => {
+            setLogoutLoading(true);
+            const result = await logout();
+            setLogoutLoading(false);
+            
+            if (result.success) {
+              // Navigate to login screen
+              navigation.replace("LoginScreen");
+            } else {
+              Alert.alert("Logout Failed", result.error || "An error occurred");
+            }
+          }
+        }
+      ]
+    );
   };
 
   const getStatusColor = (status) => {
@@ -127,176 +213,194 @@ export default function HomeScreen({ navigation }) {
   const recentOrders = orders.slice(0, 5);
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
-      >
-        <View style={styles.headerstyles}>
-          <View>
-            <Text style={styles.headertext}>Betpro Officail</Text>
-          </View>
-          <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
-            <Entypo name="log-out" size={20} color="black" />
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.userCard}>
-          <View style={{ flexDirection: "row", alignItems: 'center' }} >
-            <View style={styles.logostyes}>
-              <Text style={{ color: '#fff', fontWeight: 'bold' }}>BP</Text>
+    <>
+      <SafeAreaView style={styles.container}>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContent}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
+        >
+          <View style={styles.headerstyles}>
+            <View>
+              <Text style={styles.headertext}>Betpro Officail</Text>
             </View>
-            <Text style={styles.title}>Betpro Officail</Text>
-          </View>
-
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Username:</Text>
-            <Text style={styles.infoValue}>{username}</Text>
-          </View>
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Password:</Text>
-            <Text style={styles.infoValue}>{password}</Text>
-          </View>
-        </View>
-
-        {/* Easy Actions */}
-        <View style={styles.actionsSection}>
-          <Text style={styles.sectionTitle}>Easy Actions</Text>
-          <View style={styles.actionButtons}>
-            <TouchableOpacity
-              style={styles.actionButton}
-              onPress={() => navigation.navigate("Deposit")}
-            >
-              <LinearGradient
-                colors={['#10B981', '#059669']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={styles.actionGradient}
-              >
-                <MaterialIcons name="account-balance-wallet" size={20} color="white" />
-                <Text style={styles.actionText}>Deposit</Text>
-              </LinearGradient>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.actionButton}
-              onPress={() => navigation.navigate("PaymentWithdrawal")}
-            >
-              <LinearGradient
-                colors={['#EF4444', '#DC2626']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={styles.actionGradient}
-              >
-                <Ionicons name="arrow-down-outline" size={20} color="white" />
-                <Text style={styles.actionText}>Withdrawal</Text>
-              </LinearGradient>
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.actionButton}>
-              <LinearGradient
-                colors={['#3B82F6', '#2563EB']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={styles.actionGradient}
-              >
-                <Ionicons name="chatbubble-ellipses-outline" size={20} color="white" />
-                <Text style={styles.actionText}>Support</Text>
-              </LinearGradient>
+            <TouchableOpacity style={styles.logoutBtn} onPress={openMenu}>
+              <Entypo name="log-out" size={20} color="black" />
             </TouchableOpacity>
           </View>
-        </View>
 
-        {/* Trusted Platform Message */}
-        {/* <View style={styles.trustMessage}>
-          <Text style={styles.trustText}>🔒 The Most Trusted Betting Platform Instar</Text>
-        </View> */}
+          <View style={styles.userCard}>
+            <View style={{ flexDirection: "row", alignItems: 'center' }} >
+              <View style={styles.logostyes}>
+                <Text style={{ color: '#fff', fontWeight: 'bold' }}>BP</Text>
+              </View>
+              <Text style={styles.title}>Betpro Officail</Text>
+            </View>
 
-        {/* Recent Orders Section */}
-        {/* <View style={styles.transactionsSection}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Recent Orders</Text>
-            {orders.length > 0 && (
-              <TouchableOpacity onPress={() => navigation.navigate("Orders")}>
-                <Text style={styles.viewAllText}>View All</Text>
+            <View style={styles.infoRow}>
+              <Text style={styles.infoLabel}>Username:</Text>
+              <Text style={styles.infoValue}>{username}</Text>
+            </View>
+            <View style={styles.infoRow}>
+              <Text style={styles.infoLabel}>Password:</Text>
+              <Text style={styles.infoValue}>{password}</Text>
+            </View>
+          </View>
+
+          {/* Easy Actions */}
+          <View style={styles.actionsSection}>
+            <Text style={styles.sectionTitle}>Easy Actions</Text>
+            <View style={styles.actionButtons}>
+              <TouchableOpacity
+                style={styles.actionButton}
+                onPress={() => navigation.navigate("Deposit")}
+              >
+                <LinearGradient
+                  colors={['#10B981', '#059669']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={styles.actionGradient}
+                >
+                  <MaterialIcons name="account-balance-wallet" size={20} color="white" />
+                  <Text style={styles.actionText}>Deposit</Text>
+                </LinearGradient>
               </TouchableOpacity>
-            )}
+
+              <TouchableOpacity
+                style={styles.actionButton}
+                onPress={() => navigation.navigate("PaymentWithdrawal")}
+              >
+                <LinearGradient
+                  colors={['#EF4444', '#DC2626']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={styles.actionGradient}
+                >
+                  <Ionicons name="arrow-down-outline" size={20} color="white" />
+                  <Text style={styles.actionText}>Withdrawal</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+
+              <TouchableOpacity style={styles.actionButton}>
+                <LinearGradient
+                  colors={['#3B82F6', '#2563EB']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={styles.actionGradient}
+                >
+                  <Ionicons name="chatbubble-ellipses-outline" size={20} color="white" />
+                  <Text style={styles.actionText}>Support</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            </View>
           </View>
+
+          <View style={styles.transactionsSection}>
+            <TouchableOpacity style={styles.trustMessage}>
+              <Text style={styles.trustText}>Our Service</Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.footerSpacer} />
+        </ScrollView>
+      </SafeAreaView>
+
+      {/* Custom Slide-up Menu Modal */}
+      <Modal
+        transparent={true}
+        visible={menuVisible}
+        animationType="none"
+        onRequestClose={closeMenu}
+      >
+        <View style={styles.modalContainer}>
+          <Animated.View 
+            style={[
+              styles.overlay,
+              {
+                opacity: overlayAnim,
+              }
+            ]}
+          >
+            <TouchableOpacity 
+              style={styles.overlayTouchable}
+              activeOpacity={1}
+              onPress={closeMenu}
+            />
+          </Animated.View>
           
-          {loading ? (
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color="#10B981" />
-              <Text style={styles.loadingText}>Loading orders...</Text>
+          <Animated.View 
+            style={[
+              styles.menuContainer,
+              {
+                transform: [{ translateY: slideAnim }],
+                opacity: fadeAnim,
+              }
+            ]}
+          >
+            <View style={styles.menuHeader}>
+              <View style={styles.menuHeaderContent}>
+                <View style={styles.menuAvatar}>
+                  <Text style={styles.menuAvatarText}>
+                    {username !== "N/A" ? username[0].toUpperCase() : "U"}
+                  </Text>
+                </View>
+                <View style={styles.menuUserInfo}>
+                  <Text style={styles.menuUserName}>
+                    {username !== "N/A" ? username : "User"}
+                  </Text>
+                  <Text style={styles.menuUserEmail}>
+                    {user?.email || ""}
+                  </Text>
+                </View>
+              </View>
+              <TouchableOpacity onPress={closeMenu} style={styles.closeButton}>
+                <Ionicons name="close" size={24} color="#6B7280" />
+              </TouchableOpacity>
             </View>
-          ) : recentOrders.length === 0 ? (
-            <View style={styles.emptyState}>
-              <Ionicons name="receipt-outline" size={48} color="#D1D5DB" />
-              <Text style={styles.emptyText}>No orders yet</Text>
-              <Text style={styles.emptySubText}>
-                Tap on Deposit or Withdrawal to create your first order
-              </Text>
-            </View>
-          ) : (
-            <View style={styles.ordersList}>
-              {recentOrders.map((order) => {
-                const type = getTransactionType(order);
-                return (
-                  <TouchableOpacity 
-                    key={order.id} 
-                    style={styles.orderCard}
-                 
-                  >
-                    <View style={styles.orderHeader}>
-                      <View style={styles.orderTypeContainer}>
-                        <View style={[styles.orderIcon, { backgroundColor: type.color + '20' }]}>
-                          <Ionicons name={type.icon === 'arrow-down' ? 'arrow-down-outline' : 'arrow-up-outline'} size={20} color={type.color} />
-                        </View>
-                        <View>
-                          <Text style={styles.orderType}>{type.text}</Text>
-                          <Text style={styles.orderNumber}>{order.orderNumber}</Text>
-                        </View>
-                      </View>
-                      <View style={[styles.statusBadge, { backgroundColor: getStatusColor(order.status) }]}>
-                        <FontAwesome5 name={getStatusIcon(order.status)} size={10} color="#fff" />
-                        <Text style={styles.statusText}>{getStatusText(order.status)}</Text>
-                      </View>
-                    </View>
 
-                    <View style={styles.orderDetails}>
-                      <View style={styles.detailRow}>
-                        <Text style={styles.detailLabel}>Amount:</Text>
-                        <Text style={[styles.detailValue, { fontWeight: 'bold', color: type.color }]}>
-                          {formatAmount(order.amount)}
-                        </Text>
-                      </View>
-                      <View style={styles.detailRow}>
-                        <Text style={styles.detailLabel}>Method:</Text>
-                        <Text style={styles.detailValue}>{order.paymentMethod}</Text>
-                      </View>
-                      <View style={styles.detailRow}>
-                        <Text style={styles.detailLabel}>Date:</Text>
-                        <Text style={styles.detailValue}>{formatDate(order.createdAt)}</Text>
-                      </View>
-                    </View>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-          )}
-        </View> */}
+            <View style={styles.menuItems}>
+              {/* Change Password Option */}
+              <TouchableOpacity 
+                style={styles.menuItem}
+                onPress={handleChangePassword}
+                activeOpacity={0.7}
+              >
+                <View style={styles.menuItemLeft}>
+                  <Ionicons name="key-outline" size={24} color="#9C27B0" />
+                  <Text style={styles.menuItemText}>Change Password</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
+              </TouchableOpacity>
 
-        <View style={styles.transactionsSection}>
-          <TouchableOpacity style={styles.trustMessage}>
-            <Text style={styles.trustText}>Our Service</Text>
-          </TouchableOpacity>
+              {/* Divider */}
+              <View style={styles.menuDivider} />
+
+              {/* Logout Option */}
+              <TouchableOpacity 
+                style={[styles.menuItem, styles.logoutItem]}
+                onPress={handleLogout}
+                activeOpacity={0.7}
+                disabled={logoutLoading}
+              >
+                <View style={styles.menuItemLeft}>
+                  {logoutLoading ? (
+                    <ActivityIndicator size="small" color="#F44336" />
+                  ) : (
+                    <Ionicons name="log-out-outline" size={24} color="#F44336" />
+                  )}
+                  <Text style={[styles.menuItemText, styles.logoutText]}>
+                    {logoutLoading ? "Logging out..." : "Logout"}
+                  </Text>
+                </View>
+                {!logoutLoading && <Ionicons name="chevron-forward" size={20} color="#F44336" />}
+              </TouchableOpacity>
+            </View>
+          </Animated.View>
         </View>
-
-        <View style={styles.footerSpacer} />
-      </ScrollView>
-    </SafeAreaView>
+      </Modal>
+    </>
   );
 }
 
@@ -531,5 +635,102 @@ const styles = StyleSheet.create({
   },
   footerSpacer: {
     height: 20,
+  },
+  // Modal styles
+  modalContainer: {
+    flex: 1,
+    justifyContent: "flex-end",
+  },
+  overlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+  },
+  overlayTouchable: {
+    flex: 1,
+  },
+  menuContainer: {
+    backgroundColor: "#FFFFFF",
+    borderTopLeftRadius: 25,
+    borderTopRightRadius: 25,
+    paddingBottom: 30,
+    maxHeight: height * 0.7,
+  },
+  menuHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: "#E5E7EB",
+  },
+  menuHeaderContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
+  },
+  menuAvatar: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: "#9C27B0",
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 12,
+  },
+  menuAvatarText: {
+    fontSize: 20,
+    fontWeight: "600",
+    color: "#FFFFFF",
+  },
+  menuUserInfo: {
+    flex: 1,
+  },
+  menuUserName: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#1F2937",
+    marginBottom: 2,
+  },
+  menuUserEmail: {
+    fontSize: 12,
+    color: "#6B7280",
+  },
+  closeButton: {
+    padding: 8,
+  },
+  menuItems: {
+    paddingVertical: 10,
+  },
+  menuItem: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    paddingVertical: 15,
+  },
+  menuItemLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  menuItemText: {
+    fontSize: 16,
+    color: "#374151",
+    marginLeft: 12,
+  },
+  logoutItem: {
+    marginTop: 5,
+  },
+  logoutText: {
+    color: "#F44336",
+  },
+  menuDivider: {
+    height: 1,
+    backgroundColor: "#E5E7EB",
+    marginVertical: 5,
+    marginHorizontal: 20,
   },
 });

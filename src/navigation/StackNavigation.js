@@ -10,6 +10,7 @@ import SplashScreen from '../Screens/Splash';
 import Deposit  from '../Screens/Deposit'
 import TabNavigation from './Tabnavigation';
 import PaymentWithdrawal from '../Screens/PaymentWithdrawal';
+import ChangePasswordScreen from '../Screens/ChnagePassword';
 
 const Stack = createNativeStackNavigator();
 
@@ -43,7 +44,8 @@ export default function RootStack() {
             
             <Stack.Screen name="Deposit" component={Deposit} />
             <Stack.Screen name="PaymentWithdrawal" component={PaymentWithdrawal} />
-
+            <Stack.Screen name="ChangePasswordScreen" component={ChangePasswordScreen} />
+            
             
             </>
             
