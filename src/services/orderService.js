@@ -25,8 +25,8 @@ export const createOrder = async (userId, orderData) => {
       isDeposit: orderData.isDeposit || false,
       bpId:orderData.bpId,
       bpPassword:orderData.bpPassword,
-      userName:orderData?.displayName ?? "",
-      userEmail:orderData?.email ?? ""
+      userName:orderData?.userName ?? "",
+      userEmail:orderData?.userEmail ?? ""
     };
     
     await set(newOrderRef, order);

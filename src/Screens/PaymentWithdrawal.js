@@ -69,15 +69,13 @@ export default function PaymentWithdrawal({ navigation }) {
         base64: true,
       });
 
-      console.log('Image picker result:', result);
+    
 
       if (!result.canceled && result.assets && result.assets[0]) {
         const imageUri = result.assets[0].uri;
         const base64Data = result.assets[0].base64;
         
-        console.log('Image URI:', imageUri);
-        console.log('Base64 length:', base64Data ? base64Data.length : 0);
-        
+    
         // Generate data URL from the image
         const dataUrl = base64Data ? `data:image/jpeg;base64,${base64Data}` : null;
         

@@ -30,7 +30,7 @@ const HistoryDeposit = ({ navigation }) => {
     const unsubscribe = listenToUserOrders(user.uid, (result) => {
       if (result.success) {
         // Filter only deposits (isDeposit === true)
-        const depositOrders = result.orders.filter(order => order.isDeposit === false);
+        const depositOrders = result.orders.filter(order => order.isDeposit === true);
         setDeposits(depositOrders);
       }
       setLoading(false);
@@ -39,6 +39,9 @@ const HistoryDeposit = ({ navigation }) => {
 
     return () => unsubscribe();
   }, [user]);
+
+
+ 
 
   const onRefresh = () => {
     setRefreshing(true);
@@ -132,7 +135,7 @@ const HistoryDeposit = ({ navigation }) => {
 
   // Calculate total deposits
   const totalDeposits = deposits.reduce((sum, d) => sum + (d.amount || 0), 0);
-
+ 
   // Render deposit card (exactly same as home screen order card)
   const renderDepositCard = ({ item: deposit }) => {
     const type = getTransactionType(deposit);
@@ -217,6 +220,7 @@ const HistoryDeposit = ({ navigation }) => {
       </View>
     </>
   );
+
 
   // Render empty state
   const renderEmptyState = () => (
