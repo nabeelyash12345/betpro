@@ -11,6 +11,7 @@ import Deposit  from '../Screens/Deposit'
 import TabNavigation from './Tabnavigation';
 import PaymentWithdrawal from '../Screens/PaymentWithdrawal';
 import ChangePasswordScreen from '../Screens/ChnagePassword';
+import OrderDetails from '../Screens/OrderDetails';
 
 const Stack = createNativeStackNavigator();
 
@@ -45,6 +46,7 @@ export default function RootStack() {
             <Stack.Screen name="Deposit" component={Deposit} />
             <Stack.Screen name="PaymentWithdrawal" component={PaymentWithdrawal} />
             <Stack.Screen name="ChangePasswordScreen" component={ChangePasswordScreen} />
+            <Stack.Screen name="OrderDetails" component={OrderDetails} />
             
             
             </>

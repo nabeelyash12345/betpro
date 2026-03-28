@@ -9,6 +9,7 @@ import {
 } from 'firebase/auth';
 import { auth, database } from '../../firebase';
 import { ref, set, get, update } from 'firebase/database';
+import { getUserProfile } from '../services/userService';
 
 const AuthContext = createContext();
 
@@ -32,6 +33,8 @@ export const AuthProvider = ({ children }) => {
       setLoading(false);
       return;
     }
+
+ 
 
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       console.log('Auth state changed:', user ? 'User logged in' : 'No user');
@@ -213,6 +216,24 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+// Add this refresh function
+  const refreshUserProfile = async () => {
+    if (!user) {
+      console.log('No user logged in');
+      return { success: false, error: 'No user logged in' };
+    }
+    
+    const result = await getUserProfile(user.uid);
+    if (result.success) {
+      setUserProfile(result.data);
+      return { success: true, data: result.data };
+    } else {
+      console.error('Failed to refresh profile:', result.error);
+      return { success: false, error: result.error };
+    }
+  }
+  
+
   const value = {
     user,
     userProfile,
@@ -222,6 +243,7 @@ export const AuthProvider = ({ children }) => {
     login,
     logout,
     updateUserProfile, // Add this if needed
+    refreshUserProfile,
     isAuthenticated: !!user,
     isAdmin: userProfile?.isAdmin || false // Helper to check if user is admin
   };

@@ -24,7 +24,8 @@ import * as Clipboard from 'expo-clipboard';
 const { width, height } = Dimensions.get("window");
 
 export default function HomeScreen({ navigation }) {
-  const { user, userProfile, logout } = useAuth();
+  const { user, userProfile, logout,refreshUserProfile } = useAuth();
+  
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -59,14 +60,12 @@ export default function HomeScreen({ navigation }) {
     return () => unsubscribe();
   }, [user]);
 
-  const onRefresh = () => {
+   const onRefresh = async () => {
     setRefreshing(true);
- 
-
+    await refreshUserProfile(); // This will fetch and update the context
     setTimeout(() => {
-      setRefreshing(false)
-    }, 3000);
-    // Listener will automatically update
+      setRefreshing(false);
+    }, 1000);
   };
 
   const openMenu = () => {
@@ -149,80 +148,7 @@ export default function HomeScreen({ navigation }) {
     );
   };
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'pending':
-        return '#FF9800';
-      case 'approved':
-        return '#4CAF50';
-      case 'rejected':
-        return '#F44336';
-      case 'completed':
-        return '#2196F3';
-      default:
-        return '#9E9E9E';
-    }
-  };
 
-  const getStatusIcon = (status) => {
-    switch (status) {
-      case 'pending':
-        return 'question-circle';
-      case 'approved':
-        return 'check-circle';
-      case 'rejected':
-        return 'times-circle';
-      case 'completed':
-        return 'check-circle';
-      default:
-        return 'question-circle';
-    }
-  };
-
-  const getStatusText = (status) => {
-    switch (status) {
-      case 'pending':
-        return 'Pending';
-      case 'approved':
-        return 'Approved';
-      case 'rejected':
-        return 'Rejected';
-      case 'completed':
-        return 'Completed';
-      default:
-        return status;
-    }
-  };
-
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffTime = Math.abs(now - date);
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-    if (diffDays === 0) {
-      return `Today at ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
-    } else if (diffDays === 1) {
-      return `Yesterday at ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
-    } else {
-      return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    }
-  };
-
-  const formatAmount = (amount) => {
-    return `PKR ${amount.toLocaleString()}`;
-  };
-
-  const getTransactionType = (order) => {
-    if (order.isDeposit) {
-      return { text: 'Deposit', icon: 'arrow-down', color: '#10B981' };
-    } else {
-      return { text: 'Withdrawal', icon: 'arrow-up', color: '#EF4444' };
-    }
-  };
-
-  // Get only the last 5 orders
-  const recentOrders = orders.slice(0, 5);
 
   return (
     <>

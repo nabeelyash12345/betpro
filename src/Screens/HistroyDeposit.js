@@ -144,7 +144,7 @@ const HistoryDeposit = ({ navigation }) => {
       <TouchableOpacity 
         key={deposit.id} 
         style={styles.orderCard}
-      
+       onPress={() => navigation.navigate("OrderDetails", { order: deposit })}
       >
         <View style={styles.orderHeader}>
           <View style={styles.orderTypeContainer}>

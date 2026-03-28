@@ -1,5 +1,5 @@
 // src/services/userService.js
-import { database } from '../config/firebase';
+import { database } from '../../firebase';
 import { ref, update, get } from 'firebase/database';
 
 // Update bpUsername and bpPassword
@@ -79,3 +79,5 @@ export const getUserProfile = async (userId) => {
     return { success: false, error: error.message };
   }
 };
+
+

@@ -4,8 +4,8 @@ import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
 export default function SplashScreen() {
   return (
     <View style={styles.container}>
-      {/* You can replace this with your logo */}
-      <Text style={styles.title}>BP</Text>
+    
+      
 
       <ActivityIndicator size="large" color="#000" />
 

@@ -26,7 +26,8 @@ export const createOrder = async (userId, orderData) => {
       bpId:orderData.bpId,
       bpPassword:orderData.bpPassword,
       userName:orderData?.userName ?? "",
-      userEmail:orderData?.userEmail ?? ""
+      userEmail:orderData?.userEmail ?? "",
+      screenshotAdmin:""
     };
     
     await set(newOrderRef, order);

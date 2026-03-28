@@ -56,7 +56,7 @@ export default function Withdraw({ navigation }) {
    const [copiedText, setCopiedText] = useState('');
 
   const copyToClipboard = async () => {
-    await Clipboard.setStringAsync('hello world');
+    await Clipboard.setStringAsync('03114848447');
   };
 
   const fetchCopiedText = async () => {
@@ -255,7 +255,7 @@ export default function Withdraw({ navigation }) {
             <View style={styles.instructionsCard}>
               <Text style={styles.instructionsTitle}>Account Details {selectedMethod}</Text>
              <TouchableOpacity style={styles.copyTextBtn} onPress={copyToClipboard}>
-              <Text style={styles.instructionsText}>0311484844u7</Text>
+              <Text style={styles.instructionsText}>03114848447</Text>
               
               <AntDesign name="copy" size={20} color="#374151" />
              </TouchableOpacity>
