@@ -12,7 +12,8 @@ import {
   ActivityIndicator,
   Modal,
   Animated,
-  Alert
+  Alert,
+  Image
 } from "react-native";
 import { Entypo, Ionicons, MaterialIcons, FontAwesome5, AntDesign } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -239,8 +240,8 @@ export default function HomeScreen({ navigation }) {
 
           <View style={styles.userCard}>
             <View style={{ flexDirection: "row", alignItems: 'center' }} >
-              <View style={styles.logostyes}>
-                <Text style={{ color: '#fff', fontWeight: 'bold' }}>BP</Text>
+              <View >
+                <Image source={require("../../assets/bettpro.png")} resizeMode="cover" style={{height:60,width:100,borderRadius:5}}  />
               </View>
               <Text style={styles.title}>Betpro Officail</Text>
             </View>
