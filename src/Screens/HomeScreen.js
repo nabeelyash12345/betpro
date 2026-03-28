@@ -256,7 +256,7 @@ export default function HomeScreen({ navigation }) {
             </View>
             <View style={styles.infoRow}>
               <Text style={styles.infoLabel}>Password:</Text>
-              <TouchableOpacity onPress={() =>  copyToClipboard(password)} style={styles.copybtn}>
+              <TouchableOpacity onPress={() => copyToClipboard(password)} style={styles.copybtn}>
               <Text style={styles.infoValue}>{password}</Text>
               <AntDesign name="copy" size={10} color="#374151" />
 
