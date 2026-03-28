@@ -61,6 +61,11 @@ export default function HomeScreen({ navigation }) {
 
   const onRefresh = () => {
     setRefreshing(true);
+ 
+
+    setTimeout(() => {
+      setRefreshing(false)
+    }, 3000);
     // Listener will automatically update
   };
 
