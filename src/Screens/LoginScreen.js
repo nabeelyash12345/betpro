@@ -35,14 +35,18 @@ export default function LoginScreen({ navigation }) {
     if (!result.success) {
       // Show error message
       let errorMessage = "Login failed";
+     
       if (result.error.includes("auth/user-not-found")) {
         errorMessage = "No account found with this email";
       } else if (result.error.includes("auth/wrong-password")) {
         errorMessage = "Incorrect password";
       } else if (result.error.includes("auth/invalid-email")) {
         errorMessage = "Invalid email format";
-      } else {
+      } else if(result.error.includes("auth/invalid-credential")){
+        errorMessage = "Incorrect Email or Password";
+      }else{
         errorMessage = result.error;
+
       }
       setModalMessage(errorMessage);
       setModalVisible(true);
