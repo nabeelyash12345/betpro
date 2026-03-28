@@ -309,7 +309,6 @@ export default function PaymentWithdrawal({ navigation }) {
                   <TextInput
                     style={styles.input}
                     placeholder="Enter account number"
-                    keyboardType="numeric"
                     value={bankAccountNumber}
                     onChangeText={setBankAccountNumber}
                   />
