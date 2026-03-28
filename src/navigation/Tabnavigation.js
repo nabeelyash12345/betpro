@@ -21,12 +21,12 @@ export default function TabNavigation() {
             tabBarIcon: ({ focused, color, size }) => {
               let iconName;
 
-              if (route.name === 'Withdrawal History') {
+              if (route.name === 'Home') {
                 iconName = focused ? 'home' : 'home-outline';
               } else if (route.name === 'Deposit History') {
-                iconName = focused ? 'person' : 'person-outline';
-              } else if (route.name === 'BetFlow Login') {
-                iconName = focused ? 'settings' : 'settings-outline';
+                iconName = focused ? 'remove-circle' : 'remove-circle';
+              } else if (route.name === 'Withdrawal') {
+                iconName = focused ? 'swap-horizontal' : 'swap-horizontal';
               }
 
               // You can return any component here
@@ -62,7 +62,7 @@ export default function TabNavigation() {
           })}
         >
           <Tab.Screen 
-            name="Withdrawal History" 
+            name="Home" 
             component={HomeScreen} 
            
           />
@@ -73,7 +73,7 @@ export default function TabNavigation() {
           />
          
           <Tab.Screen 
-            name="BetFlow Login" 
+            name="Withdrawal" 
             component={Withdrawal} 
            
           />

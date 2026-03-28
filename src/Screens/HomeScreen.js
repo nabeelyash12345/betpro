@@ -137,7 +137,7 @@ export default function HomeScreen({ navigation }) {
       >
         <View style={styles.headerstyles}>
           <View>
-            <Text style={styles.headertext}>Betpro Zone</Text>
+            <Text style={styles.headertext}>Betpro Officail</Text>
           </View>
           <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
             <Entypo name="log-out" size={20} color="black" />
@@ -149,7 +149,7 @@ export default function HomeScreen({ navigation }) {
             <View style={styles.logostyes}>
               <Text style={{ color: '#fff', fontWeight: 'bold' }}>BP</Text>
             </View>
-            <Text style={styles.title}>Betpro Zone</Text>
+            <Text style={styles.title}>Betpro Officail</Text>
           </View>
 
           <View style={styles.infoRow}>
@@ -183,7 +183,7 @@ export default function HomeScreen({ navigation }) {
 
             <TouchableOpacity
               style={styles.actionButton}
-              onPress={() => navigation.navigate("Withdraw")}
+              onPress={() => navigation.navigate("PaymentWithdrawal")}
             >
               <LinearGradient
                 colors={['#EF4444', '#DC2626']}

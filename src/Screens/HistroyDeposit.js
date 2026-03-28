@@ -141,7 +141,7 @@ const HistoryDeposit = ({ navigation }) => {
       <TouchableOpacity 
         key={deposit.id} 
         style={styles.orderCard}
-        onPress={() => navigation.navigate("OrderDetails", { orderId: deposit.id })}
+      
       >
         <View style={styles.orderHeader}>
           <View style={styles.orderTypeContainer}>
@@ -296,7 +296,7 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   emptyListContent: {
-    flex: 1,
+    height:700,
   },
   statsContainer: {
     flexDirection: 'row',
@@ -420,7 +420,7 @@ const styles = StyleSheet.create({
     color: '#6B7280',
   },
   emptyState: {
-    flex: 1,
+    flex: 1/2,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 40,

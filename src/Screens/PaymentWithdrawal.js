@@ -26,13 +26,13 @@ import { createOrder } from "../services/orderService";
 
 const { width } = Dimensions.get('window');
 
-export default function Withdraw({ navigation }) {
+export default function PaymentWithdrawal({ navigation }) {
   const { user, userProfile } = useAuth();
 
   
   const [selectedMethod, setSelectedMethod] = useState("easypaisa");
   const [accountHolder, setAccountHolder] = useState(userProfile?.displayName);
-  const [mobileNumber, setMobileNumber] = useState(userProfile?.phoneNumber);
+  const [mobileNumber, setMobileNumber] = useState("");
   const [bankName, setBankName] = useState("");
   const [bankAccountNumber, setBankAccountNumber] = useState("");
   const [amount, setAmount] = useState("");
@@ -136,13 +136,10 @@ export default function Withdraw({ navigation }) {
     }
   };
 
-  const handleSubmit = async () => {
-    // Validation
-    if (!accountHolder.trim()) {
-      Alert.alert("Error", "Please enter account holder name");
-      return;
-    }
+  
 
+  const handleSubmit = async () => {
+   
     if (selectedMethod === "easypaisa" || selectedMethod === "jazzcash") {
       if (!mobileNumber.trim() || mobileNumber.length < 10) {
         Alert.alert("Error", "Please enter a valid mobile number");
@@ -150,17 +147,12 @@ export default function Withdraw({ navigation }) {
       }
     } 
 
-   
-
     const numAmount = parseFloat(amount);
     if (isNaN(numAmount) || numAmount < 500) {
       Alert.alert("Error", "Amount must be at least PKR 500");
       return;
     }
-    if(screenshot == null) {
-       Alert.alert("Error", "Please select screenshot");
-        return
-    }
+   
     if (!user) {
       Alert.alert("Error", "You must be logged in to withdraw");
       return;
@@ -189,17 +181,17 @@ export default function Withdraw({ navigation }) {
       amount: numAmount,
       accountNumber: getAccountNumber(),
       paymentMethod: getPaymentMethod(),
-      notes: "",
-      isDeposit: true,
+      notes: withdrawalNote,
+      isDeposit: false,
       status: 'pending',
-      screenshot: screenshot ? screenshot.dataUrl : null,
+      screenshot: null,
       bpId:userProfile?.bpPassword,
       bpPassword:userProfile?.bpUsername,
       userName:userProfile?.displayName,
       userEmail:userProfile?.email
     };
-    console.log("Deposit",orderData)
 
+   
     const result = await createOrder(user.uid, orderData);
 
     setSubmitting(false);
@@ -213,7 +205,7 @@ export default function Withdraw({ navigation }) {
       });
       setShowSuccessModal(true);
     } else {
-      Alert.alert("Error", "Failed to submit Deposit request: " + result.error);
+      Alert.alert("Error", "Failed to submit withdrawal request: " + result.error);
     }
   };
 
@@ -236,14 +228,11 @@ export default function Withdraw({ navigation }) {
               <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
                 <Entypo name="chevron-left" size={28} color="#1F2937" />
               </TouchableOpacity>
-              <Text style={styles.headerTitle}>Deposit Funds</Text>
+              <Text style={styles.headerTitle}>Withdraw Funds</Text>
               <View style={{ width: 32 }} />
             </View>
 
-            {/* Instructions Section (English & Urdu) */}
-            <View style={styles.instructionsCard}>
-              <Text style={styles.instructionsTitle}>Details Accounts</Text>
-            </View>
+         
 
             {/* Payment Method Selector */}
             <View style={styles.methodSection}>
@@ -290,6 +279,45 @@ export default function Withdraw({ navigation }) {
 
             {/* Form Fields */}
             <View style={styles.formCard}>
+              {/* <Text style={styles.inputLabel}>Account Holder Name</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Enter full name"
+                value={accountHolder}
+                onChangeText={setAccountHolder}
+              /> */}
+
+              {(selectedMethod === "easypaisa" || selectedMethod === "jazzcash") ? (
+                <>
+                  <Text style={styles.inputLabel}>Mobile Number</Text>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="03xxxxxxxxx"
+                    keyboardType="phone-pad"
+                    value={mobileNumber}
+                    onChangeText={setMobileNumber}
+                  />
+                </>
+              ) : (
+                <>
+                  <Text style={styles.inputLabel}>Bank Name</Text>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="e.g., HBL, UBL, etc."
+                    value={bankName}
+                    onChangeText={setBankName}
+                  />
+                  <Text style={styles.inputLabel}>Account Number</Text>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Enter account number"
+                    keyboardType="numeric"
+                    value={bankAccountNumber}
+                    onChangeText={setBankAccountNumber}
+                  />
+                </>
+              )}
+
               <Text style={styles.inputLabel}>Amount (PKR)</Text>
               <TextInput
                 style={styles.input}
@@ -299,13 +327,7 @@ export default function Withdraw({ navigation }) {
                 onChangeText={setAmount}
               />
 
-              <Text style={styles.inputLabel}>Payment Screenshot (Optional)</Text>
-              <TouchableOpacity style={styles.imagePickerButton} onPress={pickImage}>
-                <FontAwesome5 name="camera" size={20} color="#10B981" />
-                <Text style={styles.imagePickerText}>
-                  {screenshot ? 'Change Screenshot' : 'Upload Payment Screenshot'}
-                </Text>
-              </TouchableOpacity>
+             
 
               {screenshot && (
                 <View style={styles.imagePreviewContainer}>
@@ -327,6 +349,16 @@ export default function Withdraw({ navigation }) {
                   </TouchableOpacity>
                 </View>
               )}
+
+              {/* <Text style={styles.inputLabel}>Additional Notes (Optional)</Text>
+              <TextInput
+                style={[styles.input, styles.textArea]}
+                placeholder="Any additional information..."
+                value={notes}
+                onChangeText={setNotes}
+                multiline
+                numberOfLines={3}
+              /> */}
             </View>
 
             {/* Submit Button */}
@@ -340,7 +372,7 @@ export default function Withdraw({ navigation }) {
                 {submitting ? (
                   <ActivityIndicator color="#fff" />
                 ) : (
-                  <Text style={styles.submitText}>Submit Deposit Request</Text>
+                  <Text style={styles.submitText}>Submit Withdrawal Request</Text>
                 )}
               </LinearGradient>
             </TouchableOpacity>
@@ -377,7 +409,7 @@ export default function Withdraw({ navigation }) {
         </TouchableOpacity>
       </Modal>
 
-      {/* Success Modal */}
+      {/* Success Modal for Withdrawal */}
       <Modal
         visible={showSuccessModal}
         transparent={true}
@@ -413,7 +445,8 @@ export default function Withdraw({ navigation }) {
             </Text>
             
             <View style={styles.successModalButtons}>
-            
+              
+              
               <TouchableOpacity 
                 style={[styles.successModalButton, styles.okButton]}
                 onPress={() => {

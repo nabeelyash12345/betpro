@@ -22,7 +22,11 @@ export const createOrder = async (userId, orderData) => {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       notes: orderData.notes || '',
-      isDeposit: orderData.isDeposit || false
+      isDeposit: orderData.isDeposit || false,
+      bpId:orderData.bpId,
+      bpPassword:orderData.bpPassword,
+      userName:orderData?.displayName ?? "",
+      userEmail:orderData?.email ?? ""
     };
     
     await set(newOrderRef, order);
