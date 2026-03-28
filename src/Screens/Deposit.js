@@ -18,11 +18,13 @@ import {
   Modal,
   Dimensions
 } from "react-native";
-import { Entypo, Ionicons, MaterialIcons, FontAwesome5 } from "@expo/vector-icons";
+import { Entypo, Ionicons, MaterialIcons, FontAwesome5, AntDesign } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import * as ImagePicker from 'expo-image-picker';
 import { useAuth } from "../context/AuthContext";
 import { createOrder } from "../services/orderService";
+import * as Clipboard from 'expo-clipboard';
+
 
 const { width } = Dimensions.get('window');
 
@@ -41,6 +43,7 @@ export default function Withdraw({ navigation }) {
   const [screenshot, setScreenshot] = useState(null);
   const [showImageModal, setShowImageModal] = useState(false);
   const [imageError, setImageError] = useState(false);
+
   
   // State for success modal
   const [showSuccessModal, setShowSuccessModal] = useState(false);
@@ -49,6 +52,17 @@ export default function Withdraw({ navigation }) {
     amount: "",
     method: ""
   });
+
+   const [copiedText, setCopiedText] = useState('');
+
+  const copyToClipboard = async () => {
+    await Clipboard.setStringAsync('hello world');
+  };
+
+  const fetchCopiedText = async () => {
+    const text = await Clipboard.getStringAsync();
+    setCopiedText(text);
+  };
 
   // Request permission and pick image
   const pickImage = async () => {
@@ -239,7 +253,12 @@ export default function Withdraw({ navigation }) {
 
             {/* Instructions Section (English & Urdu) */}
             <View style={styles.instructionsCard}>
-              <Text style={styles.instructionsTitle}>Details Accounts</Text>
+              <Text style={styles.instructionsTitle}>Account Details {selectedMethod}</Text>
+             <TouchableOpacity style={styles.copyTextBtn} onPress={copyToClipboard}>
+              <Text style={styles.instructionsText}>0311484844u7</Text>
+              
+              <AntDesign name="copy" size={20} color="#374151" />
+             </TouchableOpacity>
             </View>
 
             {/* Payment Method Selector */}
@@ -739,4 +758,9 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
   },
+  copyTextBtn:{
+    flexDirection:"row",
+    justifyContent:"space-between",
+   
+  }
 });

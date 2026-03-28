@@ -14,10 +14,11 @@ import {
   Animated,
   Alert
 } from "react-native";
-import { Entypo, Ionicons, MaterialIcons, FontAwesome5 } from "@expo/vector-icons";
+import { Entypo, Ionicons, MaterialIcons, FontAwesome5, AntDesign } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useAuth } from "../context/AuthContext";
 import { getUserOrders, listenToUserOrders } from "../services/orderService";
+import * as Clipboard from 'expo-clipboard';
 
 const { width, height } = Dimensions.get("window");
 
@@ -36,6 +37,11 @@ export default function HomeScreen({ navigation }) {
 
   const username = userProfile?.bpUsername ?? "N/A";
   const password = userProfile?.bpPassword ?? "";
+
+
+    const copyToClipboard = async (username) => {
+      await Clipboard.setStringAsync(username);
+    };
 
   useEffect(() => {
     if (!user) return;
@@ -241,11 +247,20 @@ export default function HomeScreen({ navigation }) {
 
             <View style={styles.infoRow}>
               <Text style={styles.infoLabel}>Username:</Text>
-              <Text style={styles.infoValue}>{username}</Text>
+              <TouchableOpacity onPress={() =>  copyToClipboard(username)} style={styles.copybtn}>
+               <Text style={styles.infoValue}>{username}</Text>
+              <AntDesign name="copy" size={10} color="#374151" />
+
+              </TouchableOpacity>
+             
             </View>
             <View style={styles.infoRow}>
               <Text style={styles.infoLabel}>Password:</Text>
+              <TouchableOpacity onPress={() =>  copyToClipboard(password)} style={styles.copybtn}>
               <Text style={styles.infoValue}>{password}</Text>
+              <AntDesign name="copy" size={10} color="#374151" />
+
+               </TouchableOpacity>
             </View>
           </View>
 
@@ -468,6 +483,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#1F2937',
     fontWeight: '600',
+    marginRight:2
   },
   actionsSection: {
     marginBottom: 24,
@@ -733,4 +749,10 @@ const styles = StyleSheet.create({
     marginVertical: 5,
     marginHorizontal: 20,
   },
+  copybtn:{
+    flexDirection:"row",
+    justifyContent:"center",
+    alignItems:"center",
+    
+  }
 });
