@@ -136,7 +136,7 @@ const Withdrawal = ({ navigation }) => {
   // Render deposit card (exactly same as home screen order card)
   const renderDepositCard = ({ item: deposit }) => {
     const type = getTransactionType(deposit);
-  
+ 
     return (
       <TouchableOpacity 
         key={deposit.id} 
