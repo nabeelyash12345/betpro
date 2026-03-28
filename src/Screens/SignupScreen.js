@@ -15,7 +15,7 @@ import {
   Dimensions,
   StatusBar
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons"; // Using Expo vector icons
+import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "../context/AuthContext";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
@@ -28,8 +28,9 @@ export default function SignupScreen({ navigation }) {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [modalVisible, setModalVisible] = useState(false);
   const [modalMessage, setModalMessage] = useState("");
-  const [modalType, setModalType] = useState("error"); // "error" or "success"
+  const [modalType, setModalType] = useState("error");
   const [loading, setLoading] = useState(false);
+  const [autoLoginLoading, setAutoLoginLoading] = useState(false);
   
   // Animation values
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -47,7 +48,7 @@ export default function SignupScreen({ navigation }) {
     new Animated.Value(0),
   ]).current;
   
-  const { register } = useAuth();
+  const { register, login } = useAuth();
 
   useEffect(() => {
     // Start entrance animation
@@ -89,26 +90,21 @@ export default function SignupScreen({ navigation }) {
 
   // Validate phone number (Pakistan format)
   const validatePhoneNumber = (phone) => {
-    // Remove any spaces or special characters
     const cleaned = phone.replace(/[^\d]/g, '');
-    // Check if it's a valid Pakistan mobile number (03xxxxxxxxx or 923xxxxxxxxx)
     const phoneRegex = /^(03\d{9}|92\d{10}|0\d{10})$/;
     return phoneRegex.test(cleaned);
   };
 
   // Format phone number as user types
   const formatPhoneNumber = (text) => {
-    // Remove non-numeric characters
     let cleaned = text.replace(/[^\d]/g, '');
     
-    // Format for Pakistan numbers
     if (cleaned.startsWith('92')) {
       if (cleaned.length > 2) {
         cleaned = '0' + cleaned.slice(2);
       }
     }
     
-    // Limit to 11 digits (03XXXXXXXXX)
     if (cleaned.length > 11) {
       cleaned = cleaned.slice(0, 11);
     }
@@ -140,10 +136,6 @@ export default function SignupScreen({ navigation }) {
   // Handle modal close
   const handleModalClose = () => {
     setModalVisible(false);
-    // If it was a success modal, navigate to login screen
-    if (modalType === "success") {
-      navigation.replace("LoginScreen");
-    }
   };
 
   // Handle back button press
@@ -160,6 +152,26 @@ export default function SignupScreen({ navigation }) {
       }).start();
       navigation.goBack();
     });
+  };
+
+  // Auto login after successful registration
+  const autoLogin = async (email, password) => {
+    setAutoLoginLoading(true);
+    console.log("Attempting auto-login with:", email);
+    
+    const loginResult = await login(email, password);
+    setAutoLoginLoading(false);
+    
+    if (loginResult.success) {
+      console.log("Auto-login successful");
+      // The auth state change will trigger navigation automatically
+      // No need to manually navigate
+    } else {
+      console.log("Auto-login failed:", loginResult.error);
+      setModalType("error");
+      setModalMessage("Account created successfully! Please login manually.");
+      setModalVisible(true);
+    }
   };
 
   const handleSignup = async () => {
@@ -195,11 +207,14 @@ export default function SignupScreen({ navigation }) {
     }
 
     setLoading(true);
+    console.log("Starting registration...");
+    
     const result = await register(name, email, password, phoneNumber);
+    console.log("Registration result:", result);
+    
     setLoading(false);
 
     if (!result.success) {
-      // Show error message
       let errorMessage = "Registration failed";
       if (result.error.includes("auth/email-already-in-use")) {
         errorMessage = "Email already registered";
@@ -214,10 +229,9 @@ export default function SignupScreen({ navigation }) {
       setModalMessage(errorMessage);
       setModalVisible(true);
     } else {
-      // Registration successful - show success modal
-      setModalType("success");
-      setModalMessage("Account created successfully!");
-      setModalVisible(true);
+      // Registration successful - now auto login
+      console.log("Registration successful, attempting auto-login...");
+      await autoLogin(email, password);
     }
   };
 
@@ -461,10 +475,10 @@ export default function SignupScreen({ navigation }) {
               <TouchableOpacity 
                 style={styles.button} 
                 onPress={handleSignup}
-                disabled={loading}
+                disabled={loading || autoLoginLoading}
                 activeOpacity={0.8}
               >
-                {loading ? (
+                {loading || autoLoginLoading ? (
                   <ActivityIndicator color="#fff" />
                 ) : (
                   <Text style={styles.buttonText}>SIGN UP</Text>
@@ -490,6 +504,7 @@ export default function SignupScreen({ navigation }) {
               <TouchableOpacity 
                 onPress={() => navigation.navigate("LoginScreen")}
                 activeOpacity={0.6}
+                disabled={loading || autoLoginLoading}
               >
                 <Text style={styles.loginText}>
                   Already have an account? Login
@@ -497,7 +512,7 @@ export default function SignupScreen({ navigation }) {
               </TouchableOpacity>
             </Animated.View>
 
-            {/* Custom Modal */}
+            {/* Custom Modal - Only for errors */}
             <Modal
               transparent={true}
               visible={modalVisible}
@@ -508,32 +523,23 @@ export default function SignupScreen({ navigation }) {
                 <Animated.View 
                   style={[
                     styles.modalBox,
-                    modalType === "success" ? styles.successModalBox : styles.errorModalBox,
+                    styles.errorModalBox,
                     {
                       transform: [{ scale: scaleAnim }],
                       opacity: fadeAnim
                     }
                   ]}
                 >
-                  {/* Icon based on modal type */}
                   <View style={styles.modalIconContainer}>
-                    <Text style={modalType === "success" ? styles.successIcon : styles.errorIcon}>
-                      {modalType === "success" ? "✓" : "✗"}
-                    </Text>
+                    <Text style={styles.errorIcon}>✗</Text>
                   </View>
                   
-                  <Text style={[
-                    styles.modalText,
-                    modalType === "success" ? styles.successText : styles.errorText
-                  ]}>
+                  <Text style={[styles.modalText, styles.errorText]}>
                     {modalMessage}
                   </Text>
                   
                   <TouchableOpacity
-                    style={[
-                      styles.modalButton,
-                      modalType === "success" ? styles.successButton : styles.errorButton
-                    ]}
+                    style={styles.errorButton}
                     onPress={handleModalClose}
                     activeOpacity={0.8}
                   >
@@ -573,7 +579,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    marginTop:20,
+    marginTop: 20,
     backgroundColor: "rgba(255, 255, 255, 0.9)",
     justifyContent: "center",
     alignItems: "center",
@@ -605,14 +611,6 @@ const styles = StyleSheet.create({
     borderColor: "#E5E7EB",
     fontSize: 16,
     color: "#1F2937",
-    // shadowColor: "#000",
-    // shadowOffset: {
-    //   width: 0,
-    //   height: 1,
-    // },
-    // shadowOpacity: 0.05,
-    // shadowRadius: 2,
-    // elevation: 2,
   },
   button: {
     backgroundColor: "#9C27B0",
@@ -664,10 +662,6 @@ const styles = StyleSheet.create({
     shadowRadius: 3.84,
     elevation: 5,
   },
-  successModalBox: {
-    borderTopWidth: 4,
-    borderTopColor: "#4CAF50",
-  },
   errorModalBox: {
     borderTopWidth: 4,
     borderTopColor: "#F44336",
@@ -680,11 +674,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 15,
   },
-  successIcon: {
-    fontSize: 40,
-    color: "#4CAF50",
-    fontWeight: "bold",
-  },
   errorIcon: {
     fontSize: 40,
     color: "#F44336",
@@ -696,24 +685,16 @@ const styles = StyleSheet.create({
     textAlign: "center",
     color: "#374151",
   },
-  successText: {
-    color: "#2E7D32",
-  },
   errorText: {
     color: "#C62828",
   },
-  modalButton: {
+  errorButton: {
+    backgroundColor: "#9C27B0",
     paddingVertical: 12,
     paddingHorizontal: 30,
     borderRadius: 8,
     minWidth: 100,
     alignItems: "center",
-  },
-  successButton: {
-    backgroundColor: "#4CAF50",
-  },
-  errorButton: {
-    backgroundColor: "#9C27B0",
   },
   modalButtonText: {
     color: "#fff",

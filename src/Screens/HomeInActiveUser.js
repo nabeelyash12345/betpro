@@ -172,7 +172,7 @@ const HomeInActiveUser = ({ navigation }) => {
                 {/* WhatsApp Button */}
                 <TouchableOpacity 
                     style={styles.whatsappButton}
-                    onPress={() => navigation.navigate('PaymentScreen')}
+              
                 >
                     <FontAwesome name="whatsapp" size={24} color="#fff" />
                     <Text style={styles.whatsappButtonText}>Submit Payment Proof</Text>
