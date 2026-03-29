@@ -9,6 +9,7 @@ import {
   Dimensions
 } from 'react-native';
 import { Ionicons, FontAwesome5 } from '@expo/vector-icons';
+import AdminImageDisplay from '../components/AdminImageDisplay';
 
 const { width } = Dimensions.get("window");
 
@@ -98,8 +99,8 @@ const OrderDetails = ({ route, navigation }) => {
     <SafeAreaView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity 
-          onPress={() => navigation.goBack()} 
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
           style={styles.backButton}
         >
           <Ionicons name="arrow-back" size={24} color="#1F2937" />
@@ -108,7 +109,7 @@ const OrderDetails = ({ route, navigation }) => {
         <View style={{ width: 40 }} />
       </View>
 
-      <ScrollView 
+      <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
@@ -129,16 +130,9 @@ const OrderDetails = ({ route, navigation }) => {
           <DetailRow label="Amount" value={formatAmount(order.amount)} isImportant />
           <DetailRow label="Payment Method" value={order.paymentMethod} />
           <DetailRow label="Account Number" value={order.accountNumber} />
-          {order.bpId && <DetailRow label="BP ID" value={order.bpId} />}
-          {order.bpPassword && <DetailRow label="BP Password" value="••••••••" />}
+
         </Section>
 
-        {/* User Information */}
-        <Section title="User Information">
-          <DetailRow label="User ID" value={order.userId} />
-          <DetailRow label="Name" value={order.userName} />
-          <DetailRow label="Email" value={order.userEmail} />
-        </Section>
 
         {/* Order Information */}
         <Section title="Order Information">
@@ -155,10 +149,13 @@ const OrderDetails = ({ route, navigation }) => {
           </Section>
         )}
 
-        {/* Admin Section - Only show if screenshotAdmin exists */}
+    
         {order.screenshotAdmin && (
           <Section title="Admin Information">
-            <DetailRow label="Admin Screenshot" value="Uploaded" />
+            <AdminImageDisplay
+              imageData={order.screenshotAdmin}
+              label="Payment Screenshot"
+            />
           </Section>
         )}
       </ScrollView>
