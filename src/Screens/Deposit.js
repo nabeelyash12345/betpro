@@ -24,6 +24,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { useAuth } from "../context/AuthContext";
 import { createOrder } from "../services/orderService";
 import * as Clipboard from 'expo-clipboard';
+import { getAllBanks } from "../services/PaymentDetails";
 
 
 const { width } = Dimensions.get('window');
@@ -31,7 +32,7 @@ const { width } = Dimensions.get('window');
 export default function Withdraw({ navigation }) {
   const { user, userProfile } = useAuth();
 
-  
+   const [banks, setBanks] = useState([]);
   const [selectedMethod, setSelectedMethod] = useState("easypaisa");
   const [accountHolder, setAccountHolder] = useState(userProfile?.displayName);
   const [mobileNumber, setMobileNumber] = useState(userProfile?.phoneNumber);
@@ -44,7 +45,11 @@ export default function Withdraw({ navigation }) {
   const [showImageModal, setShowImageModal] = useState(false);
   const [imageError, setImageError] = useState(false);
 
-  
+  const easyPaisaNumber = banks?.find(bank => bank?.category?.toLowerCase() === "easypaisa") ;
+  const jazzCash = banks?.find(bank => bank?.category?.toLowerCase() === "jazzcash") ;
+  const BankAccount = banks?.find(bank => bank?.category?.toLowerCase() === "Bank") ;
+
+
   // State for success modal
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [successData, setSuccessData] = useState({
@@ -55,9 +60,27 @@ export default function Withdraw({ navigation }) {
 
    const [copiedText, setCopiedText] = useState('');
 
-  const copyToClipboard = async () => {
-    await Clipboard.setStringAsync('03114848447');
+  const copyToClipboard = async (data) => {
+    await Clipboard.setStringAsync(data);
   };
+
+
+    React.useEffect(() => {
+    loadBanks();
+  }, []);
+
+  const loadBanks = async () => {
+   
+    const result = await getAllBanks();
+    
+    if (result.success) {
+      setBanks(result.data);
+    
+    } 
+     
+  };
+
+
 
   const fetchCopiedText = async () => {
     const text = await Clipboard.getStringAsync();
@@ -254,11 +277,57 @@ export default function Withdraw({ navigation }) {
             {/* Instructions Section (English & Urdu) */}
             <View style={styles.instructionsCard}>
               <Text style={styles.instructionsTitle}>Account Details {selectedMethod}</Text>
-             <TouchableOpacity style={styles.copyTextBtn} onPress={copyToClipboard}>
-              <Text style={styles.instructionsText}>03114848447</Text>
+              { selectedMethod === "easypaisa" &&(
+              <Text style={styles.instructionsText}>Title: {easyPaisaNumber?.accountTitle }</Text>
+ 
+              )
+
+              }
+               { selectedMethod === "jazzcash" &&(
+              <Text style={styles.instructionsText}>Title: {jazzCash?.accountTitle ?? "" }</Text>
+ 
+              )
+
+              }
+               { selectedMethod === "bank" &&(
+              <Text style={styles.instructionsText}>Title: {BankAccount?.accountTitle ?? "" }</Text>
+ 
+              )
+
+              }
+
+              { selectedMethod === "bank" &&(
+              <TouchableOpacity style={styles.copyTextBtn} onPress={ () => copyToClipboard(bankAccountNumber?.accountNumber ?? "")}>
+              
+              <Text style={styles.instructionsText}>{bankAccountNumber?.accountNumber ?? ""}</Text>
               
               <AntDesign name="copy" size={20} color="#374151" />
              </TouchableOpacity>
+              )
+
+              }
+                 { selectedMethod === "easypaisa" &&(
+              <TouchableOpacity style={styles.copyTextBtn} onPress={ () => copyToClipboard(easyPaisaNumber?.accountNumber ?? "")}>
+              
+              <Text style={styles.instructionsText}>{easyPaisaNumber?.accountNumber ?? ""}</Text>
+              
+              <AntDesign name="copy" size={20} color="#374151" />
+             </TouchableOpacity>
+              )
+
+              }
+                 { selectedMethod === "jazzcash" &&(
+              <TouchableOpacity style={styles.copyTextBtn} onPress={ () => copyToClipboard(jazzCash?.accountNumber ?? "")}>
+              
+              <Text style={styles.instructionsText}>{jazzCash?.accountNumber ?? ""}</Text>
+              
+              <AntDesign name="copy" size={20} color="#374151" />
+             </TouchableOpacity>
+              )
+
+              }
+
+            
             </View>
 
             {/* Payment Method Selector */}

@@ -39,7 +39,7 @@ export default function TabNavigation() {
               backgroundColor: 'white',
               borderTopWidth: 1,
               borderTopColor: '#e0e0e0',
-              height: 80,
+              height: 100,
               paddingBottom: 10,
               paddingTop: 5,
               borderTopRightRadius:20,
