@@ -172,7 +172,7 @@ export default function HomeScreen({ navigation }) {
           <View style={styles.userCard}>
             <View style={{ flexDirection: "row", alignItems: 'center' }} >
               <View >
-                <Image source={require("../../assets/bettpro.png")} resizeMode="cover" style={{height:60,width:100,borderRadius:5}}  />
+                <Image source={require("../../assets/newlogo.png")} resizeMode="cover" style={{height:60,width:100,borderRadius:5}}  />
               </View>
               <Text style={styles.title}>Betpro Officail</Text>
             </View>

@@ -47,7 +47,7 @@ export default function Withdraw({ navigation }) {
 
   const easyPaisaNumber = banks?.find(bank => bank?.category?.toLowerCase() === "easypaisa") ;
   const jazzCash = banks?.find(bank => bank?.category?.toLowerCase() === "jazzcash") ;
-  const BankAccount = banks?.find(bank => bank?.category?.toLowerCase() === "Bank") ;
+  const BankAccount = banks?.find(bank => bank?.category?.toLowerCase() === "bank") ;
 
 
   // State for success modal
@@ -290,16 +290,20 @@ export default function Withdraw({ navigation }) {
 
               }
                { selectedMethod === "bank" &&(
+                <>
               <Text style={styles.instructionsText}>Title: {BankAccount?.accountTitle ?? "" }</Text>
- 
+              <Text style={styles.instructionsText}>Bank Name: {BankAccount?.bankName ?? "" }</Text>
+               
+                </>
+            
               )
 
               }
 
               { selectedMethod === "bank" &&(
-              <TouchableOpacity style={styles.copyTextBtn} onPress={ () => copyToClipboard(bankAccountNumber?.accountNumber ?? "")}>
+              <TouchableOpacity style={styles.copyTextBtn} onPress={ () => copyToClipboard(BankAccount?.accountNumber ?? "")}>
               
-              <Text style={styles.instructionsText}>{bankAccountNumber?.accountNumber ?? ""}</Text>
+              <Text style={styles.instructionsText}>{BankAccount?.accountNumber ?? ""}</Text>
               
               <AntDesign name="copy" size={20} color="#374151" />
              </TouchableOpacity>
@@ -341,7 +345,7 @@ export default function Withdraw({ navigation }) {
                   ]}
                   onPress={() => setSelectedMethod("easypaisa")}
                 >
-                  <FontAwesome5 name="mobile-alt" size={20} color={selectedMethod === "easypaisa" ? "#fff" : "#6B7280"} />
+                  <FontAwesome5 name="mobile-alt" size={17} color={selectedMethod === "easypaisa" ? "#fff" : "#6B7280"} />
                   <Text style={[styles.methodText, selectedMethod === "easypaisa" && styles.methodTextActive]}>
                     EasyPaisa
                   </Text>
@@ -353,7 +357,7 @@ export default function Withdraw({ navigation }) {
                   ]}
                   onPress={() => setSelectedMethod("jazzcash")}
                 >
-                  <FontAwesome5 name="mobile-alt" size={20} color={selectedMethod === "jazzcash" ? "#fff" : "#6B7280"} />
+                  <FontAwesome5 name="mobile-alt" size={17} color={selectedMethod === "jazzcash" ? "#fff" : "#6B7280"} />
                   <Text style={[styles.methodText, selectedMethod === "jazzcash" && styles.methodTextActive]}>
                     JazzCash
                   </Text>
@@ -365,7 +369,7 @@ export default function Withdraw({ navigation }) {
                   ]}
                   onPress={() => setSelectedMethod("bank")}
                 >
-                  <MaterialIcons name="account-balance" size={20} color={selectedMethod === "bank" ? "#fff" : "#6B7280"} />
+                  <MaterialIcons name="account-balance" size={17} color={selectedMethod === "bank" ? "#fff" : "#6B7280"} />
                   <Text style={[styles.methodText, selectedMethod === "bank" && styles.methodTextActive]}>
                     Bank Transfer
                   </Text>
@@ -598,14 +602,14 @@ const styles = StyleSheet.create({
   methodButtons: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    gap: 12,
+    gap: 5,
   },
   methodButton: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
+    gap: 4,
     backgroundColor: '#F3F4F6',
     paddingVertical: 12,
     borderRadius: 12,
