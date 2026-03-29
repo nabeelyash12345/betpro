@@ -223,7 +223,7 @@ export default function SignupScreen({ navigation }) {
       } else if (result.error.includes("auth/weak-password")) {
         errorMessage = "Password is too weak";
       } else {
-        errorMessage = result.error;
+        errorMessage = result?.error;
       }
       setModalType("error");
       setModalMessage(errorMessage);
@@ -260,7 +260,7 @@ export default function SignupScreen({ navigation }) {
 
   return (
     <>
-      <StatusBar barStyle="dark-content" backgroundColor="#E5E7EB" />
+      <StatusBar barStyle="dark-content" backgroundColor="#fff" />
       <KeyboardAvoidingView
         style={styles.keyboardAvoidingView}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -395,7 +395,7 @@ export default function SignupScreen({ navigation }) {
             >
               <Animated.View style={{ transform: [{ scale: phoneScale }] }}>
                 <TextInput
-                  placeholder="Phone Number (e.g., 03XXXXXXXXX)"
+                  placeholder="Phone Number"
                   style={styles.input}
                   value={phoneNumber}
                   onChangeText={handlePhoneChange}
@@ -506,8 +506,12 @@ export default function SignupScreen({ navigation }) {
                 activeOpacity={0.6}
                 disabled={loading || autoLoginLoading}
               >
+                #9C27B0
                 <Text style={styles.loginText}>
-                  Already have an account? Login
+                  Already have an account?  
+                  <Text style={{color:"#9C27B0",}} >
+                    Login
+                </Text>
                 </Text>
               </TouchableOpacity>
             </Animated.View>
@@ -564,7 +568,7 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    backgroundColor: "#E5E7EB",
+    backgroundColor: "#fff",
     justifyContent: "center",
     padding: 25,
     paddingTop: 60,
@@ -605,17 +609,17 @@ const styles = StyleSheet.create({
   },
   input: {
     backgroundColor: "#FFFFFF",
-    padding: 15,
-    borderRadius: 12,
+    padding: 14,
+    borderRadius: 8,
     borderWidth: 1,
     borderColor: "#E5E7EB",
-    fontSize: 16,
+    fontSize: 14,
     color: "#1F2937",
   },
   button: {
     backgroundColor: "#9C27B0",
-    padding: 16,
-    borderRadius: 30,
+    padding: 14,
+    borderRadius: 8,
     alignItems: "center",
     marginTop: 20,
     shadowColor: "#9C27B0",

@@ -7,7 +7,11 @@ import {
   TouchableOpacity,
   StyleSheet,
   Modal,
-  ActivityIndicator
+  ActivityIndicator,
+  Image,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView
 } from "react-native";
 import { useAuth } from "../context/AuthContext";
 
@@ -54,9 +58,27 @@ export default function LoginScreen({ navigation }) {
   };
 
   return (
-    <View style={styles.container}>
+  <KeyboardAvoidingView
+          style={styles.keyboardAvoidingView}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
+        >
+           <ScrollView
+                    contentContainerStyle={styles.scrollContainer}
+                    keyboardShouldPersistTaps="handled"
+                    showsVerticalScrollIndicator={false}
+                  >
+      
       <View style={styles.card}>
+        <View  style={{justifyContent:'center', height:140, alignItems:'center', marginTop:80}}>
+          <Image
+            source={require("../../assets/logo_neww.png")}
+            resizeMode="contain"
+            style={{ height: 100, width: 100 }}
+          />
+          </View>
         <Text style={styles.title}>Welcome Back</Text>
+        <Text style={{ marginBottom:10, fontSize:16}}>Email</Text>
         
         <TextInput
           placeholder="Email"
@@ -67,6 +89,7 @@ export default function LoginScreen({ navigation }) {
           autoCapitalize="none"
           keyboardType="email-address"
         />
+        <Text style={{ marginBottom:10, fontSize:16}}>Password</Text>
 
         <TextInput
           placeholder="Password"
@@ -89,12 +112,17 @@ export default function LoginScreen({ navigation }) {
           )}
         </TouchableOpacity>
 
+        <View
+        style={styles.signupBtn}
+        >
+          <Text>Don't have an account? </Text>
         <TouchableOpacity 
-          style={styles.signupBtn}
+          
           onPress={() => navigation.navigate("SignupScreen")}
         >
-          <Text style={styles.signupText}>GO TO SIGNUP</Text>
+          <Text style={styles.signupText}>SIGN UP</Text>
         </TouchableOpacity>
+        </View>
       </View>
 
       {/* Error Modal */}
@@ -115,30 +143,33 @@ export default function LoginScreen({ navigation }) {
           </View>
         </View>
       </Modal>
-    </View>
+      </ScrollView>
+   </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+ keyboardAvoidingView: {
     flex: 1,
-    backgroundColor: "#E5E7EB",
-    justifyContent: "center",
-    alignItems: "center",
+  },
+   scrollContainer: {
+    flexGrow: 1,
   },
   card: {
-    width: "85%",
-    backgroundColor: "#fff",
-    borderRadius: 10,
+    width: "100%",
+    flex:1,
+      //  justifyContent: "center",
+  
+    backgroundColor:'red',
     padding: 20,
-    elevation: 3,
+   backgroundColor: "#fff",
   },
   title: {
     fontSize: 24,
-    fontWeight: "bold",
+    fontWeight: "600",
     textAlign: "center",
-    marginBottom: 30,
-    color: "#374151",
+    marginBottom: 40,
+    color: "#000",
   },
   input: {
     borderWidth: 1,
@@ -151,9 +182,10 @@ const styles = StyleSheet.create({
   loginBtn: {
     backgroundColor: "#9C27B0",
     padding: 14,
-    borderRadius: 25,
+    borderRadius: 8,
     alignItems: "center",
     marginBottom: 12,
+    marginTop:20
   },
   loginText: {
     color: "#fff",
@@ -161,13 +193,17 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
   signupBtn: {
-    backgroundColor: "#1ABC9C",
-    padding: 14,
-    borderRadius: 25,
-    alignItems: "center",
+ 
+  
+     flexDirection:'row',
+     alignItems:'center',
+     justifyContent:'center',
+    marginTop:50,
+  
+    
   },
   signupText: {
-    color: "#fff",
+    color: "#9C27B0",
     fontWeight: "600",
     letterSpacing: 1,
   },

@@ -13,7 +13,8 @@ import {
   Modal,
   Animated,
   Alert,
-  Image
+  Image,
+  Linking
 } from "react-native";
 import { Entypo, Ionicons, MaterialIcons, FontAwesome5, AntDesign } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -162,7 +163,7 @@ export default function HomeScreen({ navigation }) {
         >
           <View style={styles.headerstyles}>
             <View>
-              <Text style={styles.headertext}>Betpro Officail</Text>
+              <Text style={styles.headertext}>Betpro Official</Text>
             </View>
             <TouchableOpacity style={styles.logoutBtn} onPress={openMenu}>
               <Entypo name="log-out" size={20} color="black" />
@@ -171,10 +172,22 @@ export default function HomeScreen({ navigation }) {
 
           <View style={styles.userCard}>
             <View style={{ flexDirection: "row", alignItems: 'center' }} >
-              <View >
-                <Image source={require("../../assets/newlogo.png")} resizeMode="cover" style={{height:60,width:100,borderRadius:5}}  />
-              </View>
-              <Text style={styles.title}>Betpro Officail</Text>
+             <View
+  style={{
+    backgroundColor: 'black', // gray-100 equivalent
+    borderRadius: 100,
+    borderWidth: 1,
+    borderColor: '#e4e5e7', // gray-300 for subtle border
+    overflow: 'hidden', // ensures image respects border radius
+  }}
+>
+  <Image
+    source={require("../../assets/logodesign.png")}
+    resizeMode="contain"
+    style={{ height: 40, width: 40 }}
+  />
+</View>
+              <Text style={styles.title}>Betpro Official</Text>
             </View>
 
             <View style={styles.infoRow}>
@@ -244,11 +257,16 @@ export default function HomeScreen({ navigation }) {
             </View>
           </View>
 
-          <View style={styles.transactionsSection}>
-            <TouchableOpacity style={styles.trustMessage}>
-              <Text style={styles.trustText}>Our Service</Text>
-            </TouchableOpacity>
-          </View>
+         <TouchableOpacity
+  style={styles.trustMessage}
+  onPress={() => {
+    Linking.openURL('https://Bpexch.live').catch((err) =>
+      console.error("Failed to open URL:", err)
+    );
+  }}
+>
+  <Text style={styles.trustText}>Login here</Text>
+</TouchableOpacity>
 
           <View style={styles.footerSpacer} />
         </ScrollView>
@@ -288,11 +306,22 @@ export default function HomeScreen({ navigation }) {
           >
             <View style={styles.menuHeader}>
               <View style={styles.menuHeaderContent}>
-                <View style={styles.menuAvatar}>
-                  <Text style={styles.menuAvatarText}>
-                    {username !== "N/A" ? username[0].toUpperCase() : "U"}
-                  </Text>
-                </View>
+                          <View
+  style={{
+    backgroundColor: 'black', // gray-100 equivalent
+    borderRadius: 100,
+    borderWidth: 1,
+    borderColor: '#e4e5e7', // gray-300 for subtle border
+    overflow: 'hidden', // ensures image respects border radius
+  }}
+>
+  <Image
+    source={require("../../assets/logodesign.png")}
+    resizeMode="contain"
+    style={{ height: 50, width: 50 }}
+  />
+</View>
+<View style={{marginLeft:8}}></View>
                 <View style={styles.menuUserInfo}>
                   <Text style={styles.menuUserName}>
                     {username !== "N/A" ? username : "User"}

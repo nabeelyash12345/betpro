@@ -4,7 +4,7 @@
     "slug": "Betpro",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/newlogo.png",
+    "icon": "./assets/logodesign.png",
     "userInterfaceStyle": "light",
     "splash": {
       "image": "./assets/Bold BP logo on black background.png",
@@ -17,7 +17,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#ffffff",
         "foregroundImage": "./assets/Bold BP logo on black background.png",
         "backgroundImage": "./assets/Bold BP logo on black background.png",
         "monochromeImage": "./assets/Bold BP logo on black background.png"
