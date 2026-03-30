@@ -4,7 +4,7 @@
     "slug": "Betpro",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/logodesign.png",
+    "icon": "./assets/lllllllllllll.png",
     "userInterfaceStyle": "light",
     "splash": {
       "image": "./assets/Bold BP logo on black background.png",
@@ -18,9 +18,9 @@
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#ffffff",
-        "foregroundImage": "./assets/logodesign.png",
-        "backgroundImage": "./assets/logodesign.png",
-        "monochromeImage": "./assets/logodesign.png"
+        "foregroundImage": "./assets/lllllllllllll.png",
+        "backgroundImage": "./assets/lllllllllllll.png",
+        "monochromeImage": "./assets/lllllllllllll.png"
       },
       "package": "com.betpro.myfirebaseapp"
     },

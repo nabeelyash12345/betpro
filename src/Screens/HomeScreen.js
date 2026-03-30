@@ -86,10 +86,7 @@ const copyToClipboard = async (text) => {
   console.log("sdjhsdjh", isSupported)
  
   // Find the first item (or matching a condition)
-const supportItem = isSupported?.find(item => item); // this returns the first object
-const number = supportItem?.supportNumber;
 
-console.log(number); // "03149790588"
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -186,6 +183,11 @@ console.log(number); // "03149790588"
     });
   };
 
+const supportItem = Array.isArray(isSupported) && isSupported.length > 0
+  ? isSupported.find(item => item?.supportNumber)
+  : null;
+
+const number = supportItem?.supportNumber || null;
   return (
     <>
       <SafeAreaView style={styles.container}>
@@ -232,7 +234,7 @@ console.log(number); // "03149790588"
   </Text>
 
   <TouchableOpacity onPress={() => copyToClipboard(username)}>
-    <AntDesign name="copy" size={16} color="#000" />
+    <AntDesign name="copy" size={20} color="#000" />
   </TouchableOpacity>
 </View>
 
@@ -243,7 +245,7 @@ console.log(number); // "03149790588"
   </Text>
 
   <TouchableOpacity onPress={() => copyToClipboard(password)}>
-    <AntDesign name="copy" size={16} color="#000" />
+    <AntDesign name="copy" size={20} color="#000" />
   </TouchableOpacity>
 </View>
           </View>
@@ -301,18 +303,11 @@ console.log(number); // "03149790588"
 
           <View style={styles.footerSpacer} />
         </ScrollView>
-
-      {isSupported?.find(item => item?.supportNumber) && (
+{number && (
   <TouchableOpacity 
     onPress={() => {
-      // Get the first support number
-      const supportItem = isSupported.find(item => item?.supportNumber);
-      const number = supportItem?.supportNumber;
-
-      if (number) {
-        const url = `https://wa.me/${number.replace(/\D/g, "")}`;
-        Linking.openURL(url).catch(() => alert("Unable to open WhatsApp"));
-      }
+      const url = `https://wa.me/${number.replace(/\D/g, "")}`;
+      Linking.openURL(url).catch(() => alert("Unable to open WhatsApp"));
     }}
     style={{
       position: "absolute",
@@ -337,7 +332,6 @@ console.log(number); // "03149790588"
     <Ionicons name="logo-whatsapp" size={30} color="#fff" />
   </TouchableOpacity>
 )}
-
          
     
       </SafeAreaView>
