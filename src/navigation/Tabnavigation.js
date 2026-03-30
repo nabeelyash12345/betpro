@@ -1,7 +1,7 @@
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import Withdrawal from '../Screens/Withdrawal';
@@ -13,6 +13,9 @@ import HistroyDeposit from '../Screens/HistroyDeposit';
 const Tab = createBottomTabNavigator();
 
 export default function TabNavigation() {
+
+    const insets = useSafeAreaInsets();
+
   return (
     <SafeAreaProvider>
    
@@ -33,17 +36,19 @@ export default function TabNavigation() {
               return <Ionicons name={iconName} size={size} color={color} />;
             },
             headerShown:false,
+            tabBarHideOnKeyboard: true,
             tabBarActiveTintColor: '#FF6B6B',
             tabBarInactiveTintColor: 'gray',
             tabBarStyle: {
               backgroundColor: 'white',
               borderTopWidth: 1,
               borderTopColor: '#e0e0e0',
-              height: 100,
-              paddingBottom: 10,
+              height: 70 + insets.bottom,
+              paddingBottom: insets.bottom,
               paddingTop: 5,
               borderTopRightRadius:20,
-              borderTopLeftRadius:20
+              borderTopLeftRadius:20,
+             
             },
             tabBarLabelStyle: {
               fontSize: 12,

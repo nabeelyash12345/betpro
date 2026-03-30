@@ -371,7 +371,7 @@ export default function Withdraw({ navigation }) {
                 >
                   <MaterialIcons name="account-balance" size={17} color={selectedMethod === "bank" ? "#fff" : "#6B7280"} />
                   <Text style={[styles.methodText, selectedMethod === "bank" && styles.methodTextActive]}>
-                    Bank Transfer
+                    Bank 
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -538,7 +538,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     marginBottom: 24,
-    marginTop: 20
+    marginTop: 40
   },
   backButton: {
     padding: 8,

@@ -25,7 +25,7 @@ import * as Clipboard from 'expo-clipboard';
 const { width, height } = Dimensions.get("window");
 
 export default function HomeScreen({ navigation }) {
-  const { user, userProfile, logout,refreshUserProfile } = useAuth();
+  const { user, userProfile, logout, refreshUserProfile } = useAuth();
   
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -41,10 +41,9 @@ export default function HomeScreen({ navigation }) {
   const username = userProfile?.bpUsername ?? "N/A";
   const password = userProfile?.bpPassword ?? "";
 
-
-    const copyToClipboard = async (username) => {
-      await Clipboard.setStringAsync(username);
-    };
+  const copyToClipboard = async (text) => {
+    await Clipboard.setStringAsync(text);
+  };
 
   useEffect(() => {
     if (!user) return;
@@ -61,7 +60,7 @@ export default function HomeScreen({ navigation }) {
     return () => unsubscribe();
   }, [user]);
 
-   const onRefresh = async () => {
+  const onRefresh = async () => {
     setRefreshing(true);
     await refreshUserProfile(); // This will fetch and update the context
     setTimeout(() => {
@@ -149,8 +148,6 @@ export default function HomeScreen({ navigation }) {
     );
   };
 
-
-
   return (
     <>
       <SafeAreaView style={styles.container}>
@@ -172,40 +169,37 @@ export default function HomeScreen({ navigation }) {
 
           <View style={styles.userCard}>
             <View style={{ flexDirection: "row", alignItems: 'center' }} >
-             <View
-  style={{
-    backgroundColor: 'black', // gray-100 equivalent
-    borderRadius: 100,
-    borderWidth: 1,
-    borderColor: '#e4e5e7', // gray-300 for subtle border
-    overflow: 'hidden', // ensures image respects border radius
-  }}
->
-  <Image
-    source={require("../../assets/logodesign.png")}
-    resizeMode="contain"
-    style={{ height: 40, width: 40 }}
-  />
-</View>
+              <View
+                style={{
+                  backgroundColor: 'black',
+                  borderRadius: 100,
+                  borderWidth: 1,
+                  borderColor: '#e4e5e7',
+                  overflow: 'hidden',
+                }}
+              >
+                <Image
+                  source={require("../../assets/logodesign.png")}
+                  resizeMode="contain"
+                  style={{ height: 40, width: 40 }}
+                />
+              </View>
               <Text style={styles.title}>Betpro Official</Text>
             </View>
 
             <View style={styles.infoRow}>
               <Text style={styles.infoLabel}>Username:</Text>
-              <TouchableOpacity onPress={() =>  copyToClipboard(username)} style={styles.copybtn}>
-               <Text style={styles.infoValue}>{username}</Text>
-              <AntDesign name="copy" size={10} color="#374151" />
-
+              <TouchableOpacity onPress={() => copyToClipboard(username)} style={styles.copybtn}>
+                <Text style={styles.infoValue}>{username}</Text>
+                <AntDesign name="copy" size={10} color="#374151" />
               </TouchableOpacity>
-             
             </View>
             <View style={styles.infoRow}>
               <Text style={styles.infoLabel}>Password:</Text>
               <TouchableOpacity onPress={() => copyToClipboard(password)} style={styles.copybtn}>
-              <Text style={styles.infoValue}>{password}</Text>
-              <AntDesign name="copy" size={10} color="#374151" />
-
-               </TouchableOpacity>
+                <Text style={styles.infoValue}>{password}</Text>
+                <AntDesign name="copy" size={10} color="#374151" />
+              </TouchableOpacity>
             </View>
           </View>
 
@@ -214,59 +208,51 @@ export default function HomeScreen({ navigation }) {
             <Text style={styles.sectionTitle}>Easy Actions</Text>
             <View style={styles.actionButtons}>
               <TouchableOpacity
-                style={styles.actionButton}
+                style={[styles.actionButton, styles.dullWhiteButton]}
                 onPress={() => navigation.navigate("Deposit")}
               >
-                <LinearGradient
-                  colors={['#10B981', '#059669']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={styles.actionGradient}
-                >
-                  <MaterialIcons name="account-balance-wallet" size={20} color="white" />
-                  <Text style={styles.actionText}>Deposit</Text>
-                </LinearGradient>
+                <View style={styles.actionContent}>
+                  <MaterialIcons name="account-balance-wallet" size={20} color="#374151" />
+                  <Text style={styles.dullWhiteActionText}>Deposit</Text>
+                </View>
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={styles.actionButton}
+                style={[styles.actionButton, styles.dullWhiteButton]}
                 onPress={() => navigation.navigate("PaymentWithdrawal")}
               >
-                <LinearGradient
-                  colors={['#EF4444', '#DC2626']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={styles.actionGradient}
-                >
-                  <Ionicons name="arrow-down-outline" size={20} color="white" />
-                  <Text style={styles.actionText}>Withdrawal</Text>
-                </LinearGradient>
+                <View style={styles.actionContent}>
+                  <Ionicons name="arrow-down-outline" size={20} color="#374151" />
+                  <Text style={styles.dullWhiteActionText}>Withdrawal</Text>
+                </View>
               </TouchableOpacity>
 
-              <TouchableOpacity style={styles.actionButton}>
-                <LinearGradient
-                  colors={['#3B82F6', '#2563EB']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={styles.actionGradient}
-                >
-                  <Ionicons name="chatbubble-ellipses-outline" size={20} color="white" />
-                  <Text style={styles.actionText}>Support</Text>
-                </LinearGradient>
+              <TouchableOpacity 
+                style={[styles.actionButton, styles.dullWhiteButton]}
+                onPress={() => {
+                  // Add your support action here
+                  // navigation.navigate("Support") or open support link
+                  Alert.alert("Support", "Support feature coming soon!");
+                }}
+              >
+                <View style={styles.actionContent}>
+                  <Ionicons name="chatbubble-ellipses-outline" size={20} color="#374151" />
+                  <Text style={styles.dullWhiteActionText}>Support</Text>
+                </View>
               </TouchableOpacity>
             </View>
           </View>
 
-         <TouchableOpacity
-  style={styles.trustMessage}
-  onPress={() => {
-    Linking.openURL('https://Bpexch.live').catch((err) =>
-      console.error("Failed to open URL:", err)
-    );
-  }}
->
-  <Text style={styles.trustText}>Login here</Text>
-</TouchableOpacity>
+          <TouchableOpacity
+            style={styles.trustMessage}
+            onPress={() => {
+              Linking.openURL('https://Bpexch.live').catch((err) =>
+                console.error("Failed to open URL:", err)
+              );
+            }}
+          >
+            <Text style={styles.trustText}>Login here</Text>
+          </TouchableOpacity>
 
           <View style={styles.footerSpacer} />
         </ScrollView>
@@ -306,22 +292,22 @@ export default function HomeScreen({ navigation }) {
           >
             <View style={styles.menuHeader}>
               <View style={styles.menuHeaderContent}>
-                          <View
-  style={{
-    backgroundColor: 'black', // gray-100 equivalent
-    borderRadius: 100,
-    borderWidth: 1,
-    borderColor: '#e4e5e7', // gray-300 for subtle border
-    overflow: 'hidden', // ensures image respects border radius
-  }}
->
-  <Image
-    source={require("../../assets/logodesign.png")}
-    resizeMode="contain"
-    style={{ height: 50, width: 50 }}
-  />
-</View>
-<View style={{marginLeft:8}}></View>
+                <View
+                  style={{
+                    backgroundColor: 'black',
+                    borderRadius: 100,
+                    borderWidth: 1,
+                    borderColor: '#e4e5e7',
+                    overflow: 'hidden',
+                  }}
+                >
+                  <Image
+                    source={require("../../assets/logodesign.png")}
+                    resizeMode="contain"
+                    style={{ height: 50, width: 50 }}
+                  />
+                </View>
+                <View style={{marginLeft: 8}}></View>
                 <View style={styles.menuUserInfo}>
                   <Text style={styles.menuUserName}>
                     {username !== "N/A" ? username : "User"}
@@ -444,13 +430,13 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#1F2937',
     fontWeight: '600',
-    marginRight:2
+    marginRight: 2
   },
   actionsSection: {
     marginBottom: 24,
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '600',
     color: '#1F2937',
     marginBottom: 12,
@@ -476,17 +462,32 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     overflow: 'hidden',
   },
-  actionGradient: {
+  // New styles for dull white buttons
+  dullWhiteButton: {
+    backgroundColor: '#F5F5F5', // Dull white color
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3, // For Android shadow
+    overflow: 'hidden',
+  },
+  
+  actionContent: {
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 16,
     gap: 8,
+    flexDirection: 'row', // Icon and text side by side
   },
-  actionText: {
-    color: 'white',
-    fontSize: 14,
+  
+  dullWhiteActionText: {
+    color: '#374151', // Dark gray for better contrast
+    fontSize: 12,
     fontWeight: '600',
   },
+  
   trustMessage: {
     backgroundColor: '#FEF3C7',
     padding: 14,
@@ -710,10 +711,9 @@ const styles = StyleSheet.create({
     marginVertical: 5,
     marginHorizontal: 20,
   },
-  copybtn:{
-    flexDirection:"row",
-    justifyContent:"center",
-    alignItems:"center",
-    
+  copybtn: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
   }
 });

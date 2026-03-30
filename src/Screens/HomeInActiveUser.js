@@ -147,7 +147,7 @@ const HomeInActiveUser = ({ navigation }) => {
                 </View>
 
                 {/* Instructions Section */}
-                <View style={styles.instructionsCard}>
+                {/* <View style={styles.instructionsCard}>
                     <Text style={styles.instructionsTitle}>What's Next?</Text>
                     <View style={styles.instructionItem}>
                         <FontAwesome name="check-circle" size={18} color="#4CAF50" />
@@ -167,7 +167,7 @@ const HomeInActiveUser = ({ navigation }) => {
                             Wait for admin verification (24-48 hours)
                         </Text>
                     </View>
-                </View>
+                </View> */}
 
                 {/* WhatsApp Button */}
                 <TouchableOpacity 
@@ -175,7 +175,7 @@ const HomeInActiveUser = ({ navigation }) => {
               
                 >
                     <FontAwesome name="whatsapp" size={24} color="#fff" />
-                    <Text style={styles.whatsappButtonText}>Submit Payment Proof</Text>
+                    <Text style={styles.whatsappButtonText}>Contact Here</Text>
                 </TouchableOpacity>
 
                 {/* Extra bottom padding for better scrolling experience */}

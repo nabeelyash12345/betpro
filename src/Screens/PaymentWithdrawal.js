@@ -269,7 +269,7 @@ export default function PaymentWithdrawal({ navigation }) {
                 >
                   <MaterialIcons name="account-balance" size={20} color={selectedMethod === "bank" ? "#fff" : "#6B7280"} />
                   <Text style={[styles.methodText, selectedMethod === "bank" && styles.methodTextActive]}>
-                    Bank Transfer
+                    Bank 
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -294,6 +294,13 @@ export default function PaymentWithdrawal({ navigation }) {
                     keyboardType="phone-pad"
                     value={mobileNumber}
                     onChangeText={setMobileNumber}
+                  />
+                   <Text style={styles.inputLabel}>Account Name</Text>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="e.g. john"
+                    value={bankName}
+                    onChangeText={setBankName}
                   />
                 </>
               ) : (
@@ -479,7 +486,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     marginBottom: 24,
-    marginTop: 20
+    marginTop: 40
   },
   backButton: {
     padding: 8,
