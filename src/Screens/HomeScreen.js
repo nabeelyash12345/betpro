@@ -21,6 +21,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useAuth } from "../context/AuthContext";
 import { getUserOrders, listenToUserOrders } from "../services/orderService";
 import * as Clipboard from 'expo-clipboard';
+import { getSupportNumber } from "../services/support";
 
 const { width, height } = Dimensions.get("window");
 
@@ -34,7 +35,7 @@ export default function HomeScreen({ navigation }) {
   const [logoutLoading, setLogoutLoading] = useState(false);
   const [copyModalVisible, setCopyModalVisible] = useState(false);
 const [copiedText, setCopiedText] = useState("");
-  
+const [isSupported,setSupport] = useState("");
   // Animation values
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(300)).current;
@@ -53,9 +54,23 @@ const copyToClipboard = async (text) => {
     setCopyModalVisible(false);
   }, 1500);
 };
+
+ const loadBanks = async () => {
+   
+    const result = await getSupportNumber();
+    
+    if (result.success) {
+      setSupport(result.data);
+    
+    } 
+     
+  };
+
+
   useEffect(() => {
     if (!user) return;
 
+    loadBanks()
     // Set up real-time listener for orders
     const unsubscribe = listenToUserOrders(user.uid, (result) => {
       if (result.success) {
@@ -67,6 +82,14 @@ const copyToClipboard = async (text) => {
 
     return () => unsubscribe();
   }, [user]);
+
+  console.log("sdjhsdjh", isSupported)
+ 
+  // Find the first item (or matching a condition)
+const supportItem = isSupported?.find(item => item); // this returns the first object
+const number = supportItem?.supportNumber;
+
+console.log(number); // "03149790588"
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -154,6 +177,13 @@ const copyToClipboard = async (text) => {
         }
       ]
     );
+  };
+
+    const openWhatsApp = (phone) => {
+    const url = `https://wa.me/${phone.replace(/\D/g, "")}`; // remove any non-digit characters
+    Linking.openURL(url).catch(() => {
+      alert("Unable to open WhatsApp");
+    });
   };
 
   return (
@@ -271,9 +301,45 @@ const copyToClipboard = async (text) => {
 
           <View style={styles.footerSpacer} />
         </ScrollView>
-        <View style={{marginBottom:20 ,justifyContent:'flex-end', alignItems:'flex-end', paddingVertical:10, paddingHorizontal:20}}>
-<Ionicons name="logo-whatsapp" size={44} color="#25D366" />
-        </View>
+
+      {isSupported?.find(item => item?.supportNumber) && (
+  <TouchableOpacity 
+    onPress={() => {
+      // Get the first support number
+      const supportItem = isSupported.find(item => item?.supportNumber);
+      const number = supportItem?.supportNumber;
+
+      if (number) {
+        const url = `https://wa.me/${number.replace(/\D/g, "")}`;
+        Linking.openURL(url).catch(() => alert("Unable to open WhatsApp"));
+      }
+    }}
+    style={{
+      position: "absolute",
+      bottom: 20,
+      right: 20,
+      justifyContent: 'center',
+      alignItems: 'center',
+      width: 50,
+      height: 50,
+      borderRadius: 30,
+      backgroundColor: "#25D366",
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.25,
+      shadowRadius: 3.84,
+      elevation: 5,
+      marginBottom: 20,
+      paddingVertical: 10,
+      paddingHorizontal: 10,
+    }}
+  >
+    <Ionicons name="logo-whatsapp" size={30} color="#fff" />
+  </TouchableOpacity>
+)}
+
+         
+    
       </SafeAreaView>
 
       {/* Custom Slide-up Menu Modal */}

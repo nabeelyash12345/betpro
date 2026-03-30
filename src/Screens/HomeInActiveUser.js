@@ -1,12 +1,15 @@
 // src/Screens/HomeInActiveUser.js
-import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, Modal, Alert, ScrollView } from 'react-native'
-import React, { useState } from 'react'
+import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, Modal, Alert, ScrollView, Linking } from 'react-native'
+import React, { useEffect, useState } from 'react'
 import { useAuth } from "../context/AuthContext";
 import { FontAwesome } from "@expo/vector-icons";
+import { getSupportNumber } from "../services/support";
 
 const HomeInActiveUser = ({ navigation }) => {
     const { user, userProfile, logout, loading } = useAuth();
     const [menuVisible, setMenuVisible] = useState(false);
+    const [isSupported,setSupport] = useState("");
+  
 
     const handleLogout = async () => {
         setMenuVisible(false);
@@ -42,6 +45,27 @@ const HomeInActiveUser = ({ navigation }) => {
         );
     }
 
+     const loadBanks = async () => {
+       
+        const result = await getSupportNumber();
+        
+        if (result.success) {
+          setSupport(result.data);
+        
+        } 
+         
+      };
+
+
+        useEffect(() => {
+       
+      
+          loadBanks()
+          // Set up real-time listener for orders
+          
+        }, []);
+        console.log(isSupported)
+    
     return (
         <View style={styles.container}>
             {/* Header with Three Dots Menu - Fixed at top */}
@@ -170,16 +194,27 @@ const HomeInActiveUser = ({ navigation }) => {
                 </View> */}
 
                 {/* WhatsApp Button */}
-                <TouchableOpacity 
-                    style={styles.whatsappButton}
-              
-                >
-                    <FontAwesome name="whatsapp" size={24} color="#fff" />
-                    <Text style={styles.whatsappButtonText}>Contact Here</Text>
-                </TouchableOpacity>
+                <TouchableOpacity
+  style={styles.whatsappButton}
+  onPress={() => {
+    // Get the first support number
+    const supportItem = isSupported.find(item => item?.supportNumber);
+    const number = supportItem?.supportNumber;
+
+    if (number) {
+      const url = `https://wa.me/${number.replace(/\D/g, "")}`;
+      Linking.openURL(url).catch(() => alert("Unable to open WhatsApp"));
+    } else {
+      alert("No WhatsApp number available");
+    }
+  }}
+>
+  <FontAwesome name="whatsapp" size={24} color="#fff" />
+  <Text style={styles.whatsappButtonText}>Contact Here</Text>
+</TouchableOpacity>
 
                 {/* Extra bottom padding for better scrolling experience */}
-                <View style={styles.bottomPadding} />
+                {/* <View style={styles.bottomPadding} /> */}
             </ScrollView>
         </View>
     )
