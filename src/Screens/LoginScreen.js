@@ -180,7 +180,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
   },
   loginBtn: {
-    backgroundColor: "#9C27B0",
+    backgroundColor: "#000",
     padding: 14,
     borderRadius: 8,
     alignItems: "center",
@@ -203,7 +203,7 @@ const styles = StyleSheet.create({
     
   },
   signupText: {
-    color: "#9C27B0",
+    color: "#999",
     fontWeight: "600",
     letterSpacing: 1,
   },

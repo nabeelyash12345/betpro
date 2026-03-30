@@ -228,7 +228,7 @@ const Withdrawal = ({ navigation }) => {
       </Text>
       <TouchableOpacity 
         style={styles.depositButton}
-        onPress={() => navigation.navigate("Deposit")}
+        onPress={() => navigation.navigate("PaymentWithdrawal")}
       >
         <View style={styles.depositButtonInner}>
           <Text style={styles.depositButtonText}>Make a Withdrawal</Text>

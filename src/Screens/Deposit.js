@@ -449,6 +449,7 @@ export default function Withdraw({ navigation }) {
               <FontAwesome5 name="mobile-alt" size={24} color="#10B981" />
               <Text style={styles.logoText}>EasyPaisa • JazzCash • Bank</Text>
             </View>
+            
           </ScrollView>
         </TouchableWithoutFeedback>
       </KeyboardAvoidingView>
@@ -779,6 +780,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 8,
     marginTop: 20,
+    marginBottom:100
   },
   logoText: {
     fontSize: 12,

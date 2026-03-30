@@ -506,10 +506,10 @@ export default function SignupScreen({ navigation }) {
                 activeOpacity={0.6}
                 disabled={loading || autoLoginLoading}
               >
-                #9C27B0
+             
                 <Text style={styles.loginText}>
                   Already have an account?  
-                  <Text style={{color:"#9C27B0",}} >
+                  <Text style={{color:"#999",}} >
                     Login
                 </Text>
                 </Text>
@@ -617,12 +617,12 @@ const styles = StyleSheet.create({
     color: "#1F2937",
   },
   button: {
-    backgroundColor: "#9C27B0",
+    backgroundColor: "#000",
     padding: 14,
     borderRadius: 8,
     alignItems: "center",
     marginTop: 20,
-    shadowColor: "#9C27B0",
+    shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: 4,
@@ -642,7 +642,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   loginText: {
-    color: "#6B7280",
+    color: "#000",
     fontSize: 14,
   },
   modalContainer: {

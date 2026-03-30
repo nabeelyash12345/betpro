@@ -28,7 +28,7 @@ export default function TabNavigation() {
                 iconName = focused ? 'home' : 'home-outline';
               } else if (route.name === 'Deposit History') {
                 iconName = focused ? 'remove-circle' : 'remove-circle';
-              } else if (route.name === 'Withdrawal') {
+              } else if (route.name === 'Withdrawal History') {
                 iconName = focused ? 'swap-horizontal' : 'swap-horizontal';
               }
 
@@ -78,7 +78,7 @@ export default function TabNavigation() {
           />
          
           <Tab.Screen 
-            name="Withdrawal" 
+            name="Withdrawal History" 
             component={Withdrawal} 
            
           />
