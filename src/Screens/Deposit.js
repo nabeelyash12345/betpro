@@ -44,6 +44,8 @@ export default function Withdraw({ navigation }) {
   const [screenshot, setScreenshot] = useState(null);
   const [showImageModal, setShowImageModal] = useState(false);
   const [imageError, setImageError] = useState(false);
+    const [copyModalVisible, setCopyModalVisible] = useState(false);
+
 
   const easyPaisaNumber = banks?.find(bank => bank?.category?.toLowerCase() === "easypaisa") ;
   const jazzCash = banks?.find(bank => bank?.category?.toLowerCase() === "jazzcash") ;
@@ -60,10 +62,18 @@ export default function Withdraw({ navigation }) {
 
    const [copiedText, setCopiedText] = useState('');
 
-  const copyToClipboard = async (data) => {
-    await Clipboard.setStringAsync(data);
-  };
 
+
+  const copyToClipboard = async (text) => {
+    await Clipboard.setStringAsync(text);
+    setCopiedText(text); // store copied value
+    setCopyModalVisible(true);
+  
+    // auto close after 1.5 sec
+    setTimeout(() => {
+      setCopyModalVisible(false);
+    }, 1500);
+  };
 
     React.useEffect(() => {
     loadBanks();
@@ -516,6 +526,29 @@ export default function Withdraw({ navigation }) {
           </View>
         </View>
       </Modal>
+          <Modal
+        transparent={true}
+        visible={copyModalVisible}
+        // visible={true}
+        animationType="fade"
+        onRequestClose={() => setCopyModalVisible(false)}
+      >
+        <View style={styles.copyModalOverlay}>
+          <View style={styles.copyModalBox}>
+            <Image
+            tintColor={"#000"}
+             style={{height:20,width:20}}  source={require("../../assets/bag.png")}/>
+            
+            <Text style={styles.copyModalTitle}>You can now use this code at checkout</Text>
+      
+            {/* Show copied text */}
+            <Text style={styles.copyModalText}>{copiedText}</Text>
+      
+           
+      
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -604,6 +637,13 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     gap: 5,
   },
+  copyModalTitle: {
+  fontSize: 16,
+  fontWeight: "600",
+  color: "#111827",
+  marginBottom: 6,
+  textAlign:'center'
+},
   methodButton: {
     flex: 1,
     flexDirection: 'row',
@@ -835,5 +875,42 @@ const styles = StyleSheet.create({
     flexDirection:"row",
     justifyContent:"space-between",
    
-  }
+  },
+    copyModalOverlay: {
+  flex: 1,
+  backgroundColor: "rgba(0,0,0,0.4)",
+  justifyContent: "center",
+  alignItems: "center",
+},
+
+copyModalBox: {
+  backgroundColor: "#fff",
+  padding: 20,
+  borderRadius: 16,
+  width: 260,
+  alignItems: "center",
+},
+inputBox: {
+  backgroundColor: "rgba(255,255,255,0.15)",
+  borderRadius: 12,
+  paddingVertical: 14,
+  paddingHorizontal: 16,
+  flexDirection: "row",
+  justifyContent: "space-between",
+  alignItems: "center",
+  marginTop: 10,
+},
+
+inputText: {
+  color: "#FFFFFF",
+  fontSize: 14,
+  fontWeight: "600",
+  flex: 1, // 👈 important so text doesn’t push icon out
+},
+
+iconBtn: {
+  marginLeft: 10,
+  padding: 4,
+},
+  
 });

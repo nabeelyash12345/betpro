@@ -16,7 +16,7 @@ import {
   Image,
   Linking
 } from "react-native";
-import { Entypo, Ionicons, MaterialIcons, FontAwesome5, AntDesign } from "@expo/vector-icons";
+import { Entypo, Ionicons, MaterialIcons, FontAwesome5, AntDesign, MaterialCommunityIcons, FontAwesome6 } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useAuth } from "../context/AuthContext";
 import { getUserOrders, listenToUserOrders } from "../services/orderService";
@@ -32,6 +32,8 @@ export default function HomeScreen({ navigation }) {
   const [refreshing, setRefreshing] = useState(false);
   const [menuVisible, setMenuVisible] = useState(false);
   const [logoutLoading, setLogoutLoading] = useState(false);
+  const [copyModalVisible, setCopyModalVisible] = useState(false);
+const [copiedText, setCopiedText] = useState("");
   
   // Animation values
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -41,10 +43,16 @@ export default function HomeScreen({ navigation }) {
   const username = userProfile?.bpUsername ?? "N/A";
   const password = userProfile?.bpPassword ?? "";
 
-  const copyToClipboard = async (text) => {
-    await Clipboard.setStringAsync(text);
-  };
+const copyToClipboard = async (text) => {
+  await Clipboard.setStringAsync(text);
+  setCopiedText(text); // store copied value
+  setCopyModalVisible(true);
 
+  // auto close after 1.5 sec
+  setTimeout(() => {
+    setCopyModalVisible(false);
+  }, 1500);
+};
   useEffect(() => {
     if (!user) return;
 
@@ -187,20 +195,27 @@ export default function HomeScreen({ navigation }) {
               <Text style={styles.title}>Betpro Official</Text>
             </View>
 
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Username:</Text>
-              <TouchableOpacity onPress={() => copyToClipboard(username)} style={styles.copybtn}>
-                <Text style={styles.infoValue}>{username}</Text>
-                <AntDesign name="copy" size={10} color="#374151" />
-              </TouchableOpacity>
-            </View>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Password:</Text>
-              <TouchableOpacity onPress={() => copyToClipboard(password)} style={styles.copybtn}>
-                <Text style={styles.infoValue}>{password}</Text>
-                <AntDesign name="copy" size={10} color="#374151" />
-              </TouchableOpacity>
-            </View>
+           {/* Username */}
+<View style={styles.inputBox}>
+  <Text style={styles.inputText}>
+    Username: {username}
+  </Text>
+
+  <TouchableOpacity onPress={() => copyToClipboard(username)}>
+    <AntDesign name="copy" size={16} color="#000" />
+  </TouchableOpacity>
+</View>
+
+{/* Password */}
+<View style={styles.inputBox}>
+  <Text style={styles.inputText}>
+    Password: {password}
+  </Text>
+
+  <TouchableOpacity onPress={() => copyToClipboard(password)}>
+    <AntDesign name="copy" size={16} color="#000" />
+  </TouchableOpacity>
+</View>
           </View>
 
           {/* Easy Actions */}
@@ -256,6 +271,9 @@ export default function HomeScreen({ navigation }) {
 
           <View style={styles.footerSpacer} />
         </ScrollView>
+        <View style={{marginBottom:20 ,justifyContent:'flex-end', alignItems:'flex-end', paddingVertical:10, paddingHorizontal:20}}>
+<Ionicons name="logo-whatsapp" size={44} color="#25D366" />
+        </View>
       </SafeAreaView>
 
       {/* Custom Slide-up Menu Modal */}
@@ -362,6 +380,30 @@ export default function HomeScreen({ navigation }) {
           </Animated.View>
         </View>
       </Modal>
+
+      <Modal
+  transparent={true}
+  visible={copyModalVisible}
+  animationType="fade"
+  onRequestClose={() => setCopyModalVisible(false)}
+>
+  <View style={styles.copyModalOverlay}>
+    <View style={styles.copyModalBox}>
+      <Image
+      tintColor={"#000"}
+       style={{height:20,width:20}}  source={require("../../assets/bag.png")}/>
+      
+      <Text style={styles.copyModalTitle}>You can now use this code at checkout</Text>
+
+      {/* Show copied text */}
+      <Text style={styles.copyModalText}>{copiedText}</Text>
+
+     
+
+    </View>
+  </View>
+</Modal>
+
     </>
   );
 }
@@ -432,6 +474,27 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginRight: 2
   },
+  inputBox: {
+  backgroundColor: "rgba(255,255,255,0.15)",
+  borderRadius: 12,
+  paddingVertical: 4,
+  flexDirection: "row",
+  justifyContent: "space-between",
+  alignItems: "center",
+  marginTop: 12,
+},
+
+inputText: {
+  color: "#000",
+  fontSize: 14,
+  fontWeight: "600",
+  flex: 1, // 👈 important so text doesn’t push icon out
+},
+
+iconBtn: {
+  marginLeft: 10,
+  padding: 4,
+},
   actionsSection: {
     marginBottom: 24,
   },
@@ -479,7 +542,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 16,
     gap: 8,
-    flexDirection: 'row', // Icon and text side by side
+    // flexDirection: 'row', // Icon and text side by side
   },
   
   dullWhiteActionText: {
@@ -715,5 +778,45 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-  }
+  },
+  copyModalOverlay: {
+  flex: 1,
+  backgroundColor: "rgba(0,0,0,0.4)",
+  justifyContent: "center",
+  alignItems: "center",
+},
+
+copyModalBox: {
+  backgroundColor: "#fff",
+  padding: 20,
+  borderRadius: 16,
+  width: 260,
+  alignItems: "center",
+},
+
+copyModalTitle: {
+  fontSize: 16,
+  fontWeight: "600",
+  color: "#111827",
+  marginBottom: 6,
+  textAlign:'center'
+},
+
+copyModalText: {
+  fontSize: 14,
+  color: "#2563EB",
+  marginBottom: 15,
+},
+
+copyModalBtn: {
+  backgroundColor: "#2563EB",
+  paddingVertical: 6,
+  paddingHorizontal: 20,
+  borderRadius: 6,
+},
+
+copyModalBtnText: {
+  color: "#fff",
+  fontSize: 14,
+},
 });

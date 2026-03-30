@@ -37,7 +37,7 @@ export default function TabNavigation() {
             },
             headerShown:false,
             tabBarHideOnKeyboard: true,
-            tabBarActiveTintColor: '#FF6B6B',
+            tabBarActiveTintColor: '#000',
             tabBarInactiveTintColor: 'gray',
             tabBarStyle: {
               backgroundColor: 'white',

@@ -18,9 +18,9 @@
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#ffffff",
-        "foregroundImage": "./assets/Bold BP logo on black background.png",
-        "backgroundImage": "./assets/Bold BP logo on black background.png",
-        "monochromeImage": "./assets/Bold BP logo on black background.png"
+        "foregroundImage": "./assets/logodesign.png",
+        "backgroundImage": "./assets/logodesign.png",
+        "monochromeImage": "./assets/logodesign.png"
       },
       "package": "com.betpro.myfirebaseapp"
     },
