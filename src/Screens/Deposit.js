@@ -777,7 +777,7 @@ const styles = StyleSheet.create({
   successModalDetails: {
     backgroundColor: '#F9FAFB',
     borderRadius: 12,
-    padding: 16,
+   
     width: '100%',
     marginBottom: 16,
   },
@@ -792,7 +792,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   detailValue: {
-    fontSize: 14,
+    fontSize: 11,
     color: '#1F2937',
     fontWeight: '600',
   },
