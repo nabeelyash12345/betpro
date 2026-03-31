@@ -64,7 +64,7 @@ const HomeInActiveUser = ({ navigation }) => {
           // Set up real-time listener for orders
           
         }, []);
-        console.log(isSupported)
+        
     
     return (
         <View style={styles.container}>

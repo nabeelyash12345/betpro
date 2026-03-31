@@ -8,7 +8,7 @@ import {
   onAuthStateChanged
 } from 'firebase/auth';
 import { auth, database } from '../../firebase';
-import { ref, set, get, update } from 'firebase/database';
+import { ref, set, get, update, onValue } from 'firebase/database';
 import { getUserProfile } from '../services/userService';
 
 const AuthContext = createContext();
@@ -28,62 +28,32 @@ export const AuthProvider = ({ children }) => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    if (!auth) {
-      console.error('Auth not initialized');
-      setLoading(false);
-      return;
-    }
+  let unsubscribeDb = null;
 
- 
+  const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
+    setUser(user);
 
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      console.log('Auth state changed:', user ? 'User logged in' : 'No user');
-      setUser(user);
-      
-      if (user) {
-        // Fetch user profile from Realtime Database
-        try {
-          const userRef = ref(database, `users/${user.uid}`);
-          const snapshot = await get(userRef);
-          
-          if (snapshot.exists()) {
-            console.log('User profile found:', snapshot.val());
-            setUserProfile(snapshot.val());
-          } else {
-            console.log('No user profile found, creating one...');
-            // Create profile if it doesn't exist (for existing users)
-            const defaultProfile = {
-              email: user.email,
-              displayName: user.displayName || '',
-              bpUsername: '',
-              bpPassword: '',
-              isAccepted: false,
-              isAdmin: false, // Add admin flag
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString()
-            };
-            
-            // Create the document in Realtime Database
-            await set(userRef, defaultProfile);
-            setUserProfile(defaultProfile);
-            console.log('User profile created with defaults');
-          }
-        } catch (error) {
-          console.error('Error fetching/creating user profile:', error);
-          console.error('Error details:', error.message);
+    if (user) {
+      const userRef = ref(database, `users/${user.uid}`);
+
+      unsubscribeDb = onValue(userRef, (snapshot) => {
+        if (snapshot.exists()) {
+          setUserProfile(snapshot.val());
         }
-      } else {
-        setUserProfile(null);
-      }
-      
+        setLoading(false);
+      });
+    } else {
+      setUserProfile(null);
       setLoading(false);
-    }, (error) => {
-      console.error('Auth state error:', error);
-      setLoading(false);
-    });
+    }
+  });
 
-    return () => unsubscribe();
-  }, []);
+  return () => {
+    if (unsubscribeDb) unsubscribeDb();
+    unsubscribeAuth();
+  };
+}, []);
+ 
 
   // Register function - creates account and Realtime Database profile
   const register = async (name, email, password,phoneNumber) => {
