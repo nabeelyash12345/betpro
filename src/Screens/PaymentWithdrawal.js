@@ -31,7 +31,7 @@ export default function PaymentWithdrawal({ navigation }) {
 
   
   const [selectedMethod, setSelectedMethod] = useState("easypaisa");
-  const [accountHolder, setAccountHolder] = useState(userProfile?.displayName);
+  const [accountHolder, setAccountHolder] = useState("");
   const [mobileNumber, setMobileNumber] = useState("");
   const [bankName, setBankName] = useState("");
   const [bankAccountNumber, setBankAccountNumber] = useState("");
@@ -185,8 +185,10 @@ export default function PaymentWithdrawal({ navigation }) {
       screenshot: null,
       bpId:userProfile?.bpPassword,
       bpPassword:userProfile?.bpUsername,
-      userName:userProfile?.displayName,
-      userEmail:userProfile?.email
+      userName:accountHolder,
+      userEmail:userProfile?.email,
+      bankName:bankName,
+      isBankTransfer: selectedMethod === "bank" ? true : false
     };
 
    
@@ -277,13 +279,13 @@ export default function PaymentWithdrawal({ navigation }) {
 
             {/* Form Fields */}
             <View style={styles.formCard}>
-              {/* <Text style={styles.inputLabel}>Account Holder Name</Text>
+              <Text style={styles.inputLabel}>Account Holder Name</Text>
               <TextInput
                 style={styles.input}
                 placeholder="Enter full name"
                 value={accountHolder}
                 onChangeText={setAccountHolder}
-              /> */}
+              />
 
               {(selectedMethod === "easypaisa" || selectedMethod === "jazzcash") ? (
                 <>
@@ -299,8 +301,8 @@ export default function PaymentWithdrawal({ navigation }) {
                   <TextInput
                     style={styles.input}
                     placeholder="e.g. john"
-                    value={bankName}
-                    onChangeText={setBankName}
+                    value={accountHolder}
+                    onChangeText={setAccountHolder}
                   />
                 </>
               ) : (

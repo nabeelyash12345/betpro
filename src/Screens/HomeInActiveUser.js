@@ -92,15 +92,7 @@ const HomeInActiveUser = ({ navigation }) => {
                     onPress={() => setMenuVisible(false)}
                 >
                     <View style={styles.modalMenu}>
-                        <TouchableOpacity 
-                            style={styles.menuItem}
-                            onPress={handleRefresh}
-                        >
-                            <FontAwesome name="refresh" size={18} color="#2196F3" />
-                            <Text style={styles.menuItemText}>Refresh Status</Text>
-                        </TouchableOpacity>
-                        
-                        <View style={styles.menuDivider} />
+                       
                         
                         <TouchableOpacity 
                             style={[styles.menuItem, styles.logoutMenuItem]}
