@@ -207,6 +207,7 @@ const HomeInActiveUser = ({ navigation }) => {
 
                 {/* Extra bottom padding for better scrolling experience */}
                 {/* <View style={styles.bottomPadding} /> */}
+                <View style={{ marginBottom:100}}></View>
             </ScrollView>
         </View>
     )
