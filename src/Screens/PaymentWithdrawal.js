@@ -1,5 +1,5 @@
 // src/Screens/Withdraw.js
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -23,13 +23,13 @@ import { LinearGradient } from "expo-linear-gradient";
 import * as ImagePicker from 'expo-image-picker';
 import { useAuth } from "../context/AuthContext";
 import { createOrder } from "../services/orderService";
+import { listenToWithdrawalTime } from "../services/withdrawalTime";
 
 const { width } = Dimensions.get('window');
 
 export default function PaymentWithdrawal({ navigation }) {
   const { user, userProfile } = useAuth();
 
-  
   const [selectedMethod, setSelectedMethod] = useState("easypaisa");
   const [accountHolder, setAccountHolder] = useState("");
   const [mobileNumber, setMobileNumber] = useState("");
@@ -41,6 +41,7 @@ export default function PaymentWithdrawal({ navigation }) {
   const [screenshot, setScreenshot] = useState(null);
   const [showImageModal, setShowImageModal] = useState(false);
   const [imageError, setImageError] = useState(false);
+  const [withdrawaltime, setWithdrawalTime] = useState([]);
   
   // State for success modal
   const [showSuccessModal, setShowSuccessModal] = useState(false);
@@ -49,6 +50,77 @@ export default function PaymentWithdrawal({ navigation }) {
     amount: "",
     method: ""
   });
+
+  // State for time restriction modal
+  const [showTimeRestrictionModal, setShowTimeRestrictionModal] = useState(false);
+  const [timeRestrictionData, setTimeRestrictionData] = useState({
+    fromTime: "",
+    toTime: ""
+  });
+
+  useEffect(() => {
+    const unsubscribe = listenToWithdrawalTime((result) => {
+      if (result.success) {
+        setWithdrawalTime(result.data);
+      }
+    });
+
+    return () => unsubscribe(); // cleanup on unmount
+  }, []);
+
+  const timeWithdrawal = withdrawaltime?.find(item => item?.url) || null;
+
+  console.log("withdrawaltime", timeWithdrawal)
+
+  // Helper function to check if withdrawal is allowed
+  const isWithdrawalAllowed = () => {
+    if (!timeWithdrawal || !timeWithdrawal.fromtime || !timeWithdrawal.toTime) {
+      // If no time data exists, block withdrawals
+      return false;
+    }
+
+    const now = new Date();
+    const currentHours = now.getHours();
+    const currentMinutes = now.getMinutes();
+    const currentTimeInMinutes = currentHours * 60 + currentMinutes;
+
+    // Parse fromtime (e.g., "02:44 AM")
+    const fromTimeParts = timeWithdrawal.fromtime.match(/(\d+):(\d+)\s*(AM|PM)/i);
+    if (!fromTimeParts) return false;
+    
+    let fromHours = parseInt(fromTimeParts[1]);
+    const fromMinutes = parseInt(fromTimeParts[2]);
+    const fromPeriod = fromTimeParts[3].toUpperCase();
+    
+    // Convert to 24-hour format
+    if (fromPeriod === 'PM' && fromHours !== 12) fromHours += 12;
+    if (fromPeriod === 'AM' && fromHours === 12) fromHours = 0;
+    
+    const fromTimeInMinutes = fromHours * 60 + fromMinutes;
+
+    // Parse toTime (e.g., "10:44 PM")
+    const toTimeParts = timeWithdrawal.toTime.match(/(\d+):(\d+)\s*(AM|PM)/i);
+    if (!toTimeParts) return false;
+    
+    let toHours = parseInt(toTimeParts[1]);
+    const toMinutes = parseInt(toTimeParts[2]);
+    const toPeriod = toTimeParts[3].toUpperCase();
+    
+    // Convert to 24-hour format
+    if (toPeriod === 'PM' && toHours !== 12) toHours += 12;
+    if (toPeriod === 'AM' && toHours === 12) toHours = 0;
+    
+    const toTimeInMinutes = toHours * 60 + toMinutes;
+
+    // Check if current time is within the allowed window
+    if (fromTimeInMinutes <= toTimeInMinutes) {
+      // Same day window
+      return currentTimeInMinutes >= fromTimeInMinutes && currentTimeInMinutes <= toTimeInMinutes;
+    } else {
+      // Overnight window
+      return currentTimeInMinutes >= fromTimeInMinutes || currentTimeInMinutes <= toTimeInMinutes;
+    }
+  };
 
   // Request permission and pick image
   const pickImage = async () => {
@@ -69,13 +141,10 @@ export default function PaymentWithdrawal({ navigation }) {
         base64: true,
       });
 
-    
-
       if (!result.canceled && result.assets && result.assets[0]) {
         const imageUri = result.assets[0].uri;
         const base64Data = result.assets[0].base64;
         
-    
         // Generate data URL from the image
         const dataUrl = base64Data ? `data:image/jpeg;base64,${base64Data}` : null;
         
@@ -134,10 +203,18 @@ export default function PaymentWithdrawal({ navigation }) {
     }
   };
 
-  
-
   const handleSubmit = async () => {
-   
+    // Check if withdrawal is allowed based on time
+    if (!isWithdrawalAllowed()) {
+      // Show time restriction modal instead of alert
+      setTimeRestrictionData({
+        fromTime: timeWithdrawal?.fromtime || 'N/A',
+        toTime: timeWithdrawal?.toTime || 'N/A'
+      });
+      setShowTimeRestrictionModal(true);
+      return;
+    }
+
     if (selectedMethod === "easypaisa" || selectedMethod === "jazzcash") {
       if (!mobileNumber.trim() || mobileNumber.length < 10) {
         Alert.alert("Error", "Please enter a valid mobile number");
@@ -183,15 +260,14 @@ export default function PaymentWithdrawal({ navigation }) {
       isDeposit: false,
       status: 'pending',
       screenshot: null,
-      bpId:userProfile?.bpPassword,
-      bpPassword:userProfile?.bpUsername,
-      userName:accountHolder,
-      userEmail:userProfile?.email,
-      bankName:bankName,
+      bpId: userProfile?.bpPassword,
+      bpPassword: userProfile?.bpUsername,
+      userName: accountHolder,
+      userEmail: userProfile?.email,
+      bankName: bankName,
       isBankTransfer: selectedMethod === "bank" ? true : false
     };
 
-   
     const result = await createOrder(user.uid, orderData);
 
     setSubmitting(false);
@@ -232,7 +308,38 @@ export default function PaymentWithdrawal({ navigation }) {
               <View style={{ width: 32 }} />
             </View>
 
-         
+            {/* Time Info Card */}
+            {timeWithdrawal && (
+              <View style={[
+                styles.timeInfoCard,
+                !isWithdrawalAllowed() && styles.timeInfoCardWarning
+              ]}>
+                <View style={styles.timeInfoHeader}>
+                  <Ionicons name="time-outline" size={20} color={!isWithdrawalAllowed() ? "#EF4444" : "#10B981"} />
+                  <Text style={[styles.timeInfoTitle, !isWithdrawalAllowed() && styles.timeInfoTitleWarning]}>
+                    Withdrawal Schedule
+                  </Text>
+                </View>
+                <Text style={styles.timeInfoText}>
+                  {timeWithdrawal.fromtime} - {timeWithdrawal.toTime}
+                </Text>
+                {!isWithdrawalAllowed() ? (
+                  <View style={styles.timeWarningContainer}>
+                    <Ionicons name="alert-circle" size={16} color="#EF4444" />
+                    <Text style={styles.timeWarningText}>
+                      Withdrawals are currently not available
+                    </Text>
+                  </View>
+                ) : (
+                  <View style={styles.timeSuccessContainer}>
+                    <Ionicons name="checkmark-circle" size={16} color="#10B981" />
+                    <Text style={styles.timeSuccessText}>
+                      Withdrawals are now available
+                    </Text>
+                  </View>
+                )}
+              </View>
+            )}
 
             {/* Payment Method Selector */}
             <View style={styles.methodSection}>
@@ -297,13 +404,6 @@ export default function PaymentWithdrawal({ navigation }) {
                     value={mobileNumber}
                     onChangeText={setMobileNumber}
                   />
-                   <Text style={styles.inputLabel}>Account Name</Text>
-                  <TextInput
-                    style={styles.input}
-                    placeholder="e.g. john"
-                    value={accountHolder}
-                    onChangeText={setAccountHolder}
-                  />
                 </>
               ) : (
                 <>
@@ -333,8 +433,6 @@ export default function PaymentWithdrawal({ navigation }) {
                 onChangeText={setAmount}
               />
 
-             
-
               {screenshot && (
                 <View style={styles.imagePreviewContainer}>
                   <TouchableOpacity onPress={() => setShowImageModal(true)}>
@@ -355,22 +453,16 @@ export default function PaymentWithdrawal({ navigation }) {
                   </TouchableOpacity>
                 </View>
               )}
-
-              {/* <Text style={styles.inputLabel}>Additional Notes (Optional)</Text>
-              <TextInput
-                style={[styles.input, styles.textArea]}
-                placeholder="Any additional information..."
-                value={notes}
-                onChangeText={setNotes}
-                multiline
-                numberOfLines={3}
-              /> */}
             </View>
 
             {/* Submit Button */}
-            <TouchableOpacity style={styles.submitButton} onPress={handleSubmit} disabled={submitting}>
+            <TouchableOpacity 
+              style={[styles.submitButton, !isWithdrawalAllowed() && styles.disabledButton]} 
+              onPress={handleSubmit} 
+              disabled={submitting}
+            >
               <LinearGradient
-                colors={['#10B981', '#059669']}
+                colors={!isWithdrawalAllowed() ? ['#9CA3AF', '#9CA3AF'] : ['#10B981', '#059669']}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 style={styles.submitGradient}
@@ -378,7 +470,9 @@ export default function PaymentWithdrawal({ navigation }) {
                 {submitting ? (
                   <ActivityIndicator color="#fff" />
                 ) : (
-                  <Text style={styles.submitText}>Submit Withdrawal Request</Text>
+                  <Text style={styles.submitText}>
+                    {!isWithdrawalAllowed() ? 'Withdrawals Currently Unavailable' : 'Submit Withdrawal Request'}
+                  </Text>
                 )}
               </LinearGradient>
             </TouchableOpacity>
@@ -451,8 +545,6 @@ export default function PaymentWithdrawal({ navigation }) {
             </Text>
             
             <View style={styles.successModalButtons}>
-              
-              
               <TouchableOpacity 
                 style={[styles.successModalButton, styles.okButton]}
                 onPress={() => {
@@ -463,6 +555,60 @@ export default function PaymentWithdrawal({ navigation }) {
                 <Text style={styles.okButtonText}>OK</Text>
               </TouchableOpacity>
             </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Time Restriction Modal */}
+      <Modal
+        visible={showTimeRestrictionModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowTimeRestrictionModal(false)}
+      >
+        <View style={styles.timeModalOverlay}>
+          <View style={styles.timeModalContainer}>
+            {/* Warning Icon */}
+            <View style={styles.timeModalIconContainer}>
+              <Ionicons name="time-outline" size={70} color="#F59E0B" />
+            </View>
+            
+            <Text style={styles.timeModalTitle}>Withdrawal Not Available</Text>
+            
+            <Text style={styles.timeModalDescription}>
+              Withdrawals can only be processed during the specified time window.
+            </Text>
+            
+            <View style={styles.timeModalScheduleContainer}>
+              <Text style={styles.timeModalScheduleLabel}>Withdrawal Hours:</Text>
+              <View style={styles.timeModalScheduleBox}>
+                <Ionicons name="time" size={20} color="#10B981" />
+                <Text style={styles.timeModalScheduleTime}>
+                  {timeRestrictionData.fromTime} - {timeRestrictionData.toTime}
+                </Text>
+              </View>
+            </View>
+            
+            <View style={styles.timeModalInfoContainer}>
+              <Ionicons name="information-circle" size={18} color="#6B7280" />
+              <Text style={styles.timeModalInfoText}>
+                Please try again during the allowed withdrawal hours.
+              </Text>
+            </View>
+            
+            <TouchableOpacity 
+              style={styles.timeModalButton}
+              onPress={() => setShowTimeRestrictionModal(false)}
+            >
+              <LinearGradient
+                colors={['#F59E0B', '#D97706']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.timeModalGradient}
+              >
+                <Text style={styles.timeModalButtonText}>I Understand</Text>
+              </LinearGradient>
+            </TouchableOpacity>
           </View>
         </View>
       </Modal>
@@ -499,7 +645,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#1F2937',
   },
-  instructionsCard: {
+  timeInfoCard: {
     backgroundColor: '#FFFFFF',
     borderRadius: 16,
     padding: 16,
@@ -509,36 +655,54 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 4,
     elevation: 2,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
   },
-  instructionsTitle: {
+  timeInfoCardWarning: {
+    borderColor: '#EF4444',
+    backgroundColor: '#FEF2F2',
+  },
+  timeInfoHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+    gap: 8,
+  },
+  timeInfoTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#1F2937',
-    marginBottom: 8,
+    color: '#10B981',
   },
-  instructionsText: {
-    fontSize: 13,
+  timeInfoTitleWarning: {
+    color: '#EF4444',
+  },
+  timeInfoText: {
+    fontSize: 14,
     color: '#4B5563',
-    lineHeight: 20,
-    marginBottom: 12,
-  },
-  divider: {
-    height: 1,
-    backgroundColor: '#E5E7EB',
-    marginVertical: 12,
-  },
-  instructionsTitleUrdu: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#1F2937',
     marginBottom: 8,
-    textAlign: 'right',
+    fontWeight: '500',
   },
-  instructionsTextUrdu: {
-    fontSize: 13,
-    color: '#4B5563',
-    lineHeight: 20,
-    textAlign: 'right',
+  timeWarningContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 4,
+  },
+  timeWarningText: {
+    fontSize: 12,
+    color: '#EF4444',
+    fontWeight: '500',
+  },
+  timeSuccessContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 4,
+  },
+  timeSuccessText: {
+    fontSize: 12,
+    color: '#10B981',
+    fontWeight: '500',
   },
   methodSection: {
     marginBottom: 24,
@@ -673,6 +837,9 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     marginBottom: 20,
   },
+  disabledButton: {
+    opacity: 0.7,
+  },
   submitGradient: {
     paddingVertical: 14,
     alignItems: 'center',
@@ -689,7 +856,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 8,
     marginTop: 20,
-    marginBottom:100
+    marginBottom: 100
   },
   logoText: {
     fontSize: 12,
@@ -728,9 +895,9 @@ const styles = StyleSheet.create({
   successModalDetails: {
     backgroundColor: '#F9FAFB',
     borderRadius: 12,
-    // padding: 16,
     width: '100%',
     marginBottom: 16,
+    padding: 16,
   },
   detailRow: {
     flexDirection: 'row',
@@ -743,7 +910,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   detailValue: {
-    fontSize: 11,
+    fontSize: 14,
     color: '#1F2937',
     fontWeight: '600',
   },
@@ -756,9 +923,8 @@ const styles = StyleSheet.create({
   },
   successModalButtons: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
     width: '100%',
-    gap: 12,
   },
   successModalButton: {
     flex: 1,
@@ -775,11 +941,104 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   okButton: {
-    backgroundColor: '#F3F4F6',
+    backgroundColor: '#10B981',
   },
   okButtonText: {
-    color: '#374151',
+    color: '#FFFFFF',
     fontSize: 14,
+    fontWeight: '600',
+  },
+  // Time Restriction Modal Styles
+  timeModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  timeModalContainer: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    padding: 24,
+    width: width - 48,
+    maxWidth: 400,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  timeModalIconContainer: {
+    marginBottom: 16,
+  },
+  timeModalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#1F2937',
+    textAlign: 'center',
+    marginBottom: 12,
+  },
+  timeModalDescription: {
+    fontSize: 14,
+    color: '#6B7280',
+    textAlign: 'center',
+    marginBottom: 20,
+    lineHeight: 20,
+  },
+  timeModalScheduleContainer: {
+    width: '100%',
+    marginBottom: 20,
+  },
+  timeModalScheduleLabel: {
+    fontSize: 13,
+    color: '#4B5563',
+    fontWeight: '500',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  timeModalScheduleBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: '#F3F4F6',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+  },
+  timeModalScheduleTime: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#10B981',
+  },
+  timeModalInfoContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#FEF3C7',
+    padding: 12,
+    borderRadius: 12,
+    marginBottom: 24,
+    width: '100%',
+  },
+  timeModalInfoText: {
+    fontSize: 12,
+    color: '#92400E',
+    flex: 1,
+  },
+  timeModalButton: {
+    borderRadius: 12,
+    overflow: 'hidden',
+    width: '100%',
+  },
+  timeModalGradient: {
+    paddingVertical: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  timeModalButtonText: {
+    color: 'white',
+    fontSize: 16,
     fontWeight: '600',
   },
 });

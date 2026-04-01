@@ -608,12 +608,12 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
   button: {
-    backgroundColor: "#9C27B0",
+    backgroundColor: "#000",
     padding: 16,
     borderRadius: 30,
     alignItems: "center",
     marginTop: 20,
-    shadowColor: "#9C27B0",
+    shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: 4,

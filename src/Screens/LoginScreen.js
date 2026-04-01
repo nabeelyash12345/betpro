@@ -203,7 +203,7 @@ const styles = StyleSheet.create({
     
   },
   signupText: {
-    color: "#999",
+    color: "red",
     fontWeight: "600",
     letterSpacing: 1,
   },

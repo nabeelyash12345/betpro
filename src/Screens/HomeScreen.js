@@ -22,20 +22,22 @@ import { useAuth } from "../context/AuthContext";
 import { getUserOrders, listenToUserOrders } from "../services/orderService";
 import * as Clipboard from 'expo-clipboard';
 import { getSupportNumber } from "../services/support";
+import {  listenToWithdrawalTime } from "../services/withdrawalTime";
 
 const { width, height } = Dimensions.get("window");
 
 export default function HomeScreen({ navigation }) {
   const { user, userProfile, logout, refreshUserProfile } = useAuth();
-  
+
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [menuVisible, setMenuVisible] = useState(false);
   const [logoutLoading, setLogoutLoading] = useState(false);
   const [copyModalVisible, setCopyModalVisible] = useState(false);
-const [copiedText, setCopiedText] = useState("");
-const [isSupported,setSupport] = useState("");
+  const [copiedText, setCopiedText] = useState("");
+  const [isSupported, setSupport] = useState("");
+  const [withdrawaltime,setWithdrawalTime] = useState([]);
   // Animation values
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(300)).current;
@@ -44,33 +46,45 @@ const [isSupported,setSupport] = useState("");
   const username = userProfile?.bpUsername ?? "N/A";
   const password = userProfile?.bpPassword ?? "";
 
-const copyToClipboard = async (text) => {
-  await Clipboard.setStringAsync(text);
-  setCopiedText(text); // store copied value
-  setCopyModalVisible(true);
+  const copyToClipboard = async (text) => {
+    await Clipboard.setStringAsync(text);
+    setCopiedText(text); // store copied value
+    setCopyModalVisible(true);
 
-  // auto close after 1.5 sec
-  setTimeout(() => {
-    setCopyModalVisible(false);
-  }, 1500);
-};
-
- const loadBanks = async () => {
-   
-    const result = await getSupportNumber();
-    
-    if (result.success) {
-      setSupport(result.data);
-    
-    } 
-     
+    // auto close after 1.5 sec
+    setTimeout(() => {
+      setCopyModalVisible(false);
+    }, 1500);
   };
 
+  const loadBanks = async () => {
+
+    const result = await getSupportNumber();
+
+    if (result.success) {
+      setSupport(result.data);
+
+    }
+
+  };
+
+
+  useEffect(() => {
+   const unsubscribe = listenToWithdrawalTime((result) => {
+     if (result.success) {
+       setWithdrawalTime(result.data);
+     }
+   });
+ 
+   return () => unsubscribe(); // cleanup on unmount
+ }, []);
+ 
 
   useEffect(() => {
     if (!user) return;
 
     loadBanks()
+   
     // Set up real-time listener for orders
     const unsubscribe = listenToUserOrders(user.uid, (result) => {
       if (result.success) {
@@ -83,10 +97,11 @@ const copyToClipboard = async (text) => {
     return () => unsubscribe();
   }, [user]);
 
-  console.log("sdjhsdjh", isSupported)
- 
+  console.log("sdjhsdjh", withdrawaltime?.url)
+
   // Find the first item (or matching a condition)
 
+  const loginUrl = withdrawaltime?.find(item => item?.url)?.url || null;
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -163,7 +178,7 @@ const copyToClipboard = async (text) => {
             setLogoutLoading(true);
             const result = await logout();
             setLogoutLoading(false);
-            
+
             if (result.success) {
               // Navigate to login screen
               navigation.replace("LoginScreen");
@@ -176,18 +191,18 @@ const copyToClipboard = async (text) => {
     );
   };
 
-    const openWhatsApp = (phone) => {
+  const openWhatsApp = (phone) => {
     const url = `https://wa.me/${phone.replace(/\D/g, "")}`; // remove any non-digit characters
     Linking.openURL(url).catch(() => {
       alert("Unable to open WhatsApp");
     });
   };
 
-const supportItem = Array.isArray(isSupported) && isSupported.length > 0
-  ? isSupported.find(item => item?.supportNumber)
-  : null;
+  const supportItem = Array.isArray(isSupported) && isSupported.length > 0
+    ? isSupported.find(item => item?.supportNumber)
+    : null;
 
-const number = supportItem?.supportNumber || null;
+  const number = supportItem?.supportNumber || null;
   return (
     <>
       <SafeAreaView style={styles.container}>
@@ -227,27 +242,27 @@ const number = supportItem?.supportNumber || null;
               <Text style={styles.title}>Betpro Official</Text>
             </View>
 
-           {/* Username */}
-<View style={styles.inputBox}>
-  <Text style={styles.inputText}>
-    Username: {username}
-  </Text>
+            {/* Username */}
+            <View style={styles.inputBox}>
+              <Text style={styles.inputText}>
+                Username: {username}
+              </Text>
 
-  <TouchableOpacity onPress={() => copyToClipboard(username)}>
-    <AntDesign name="copy" size={20} color="#000" />
-  </TouchableOpacity>
-</View>
+              <TouchableOpacity onPress={() => copyToClipboard(username)}>
+                <AntDesign name="copy" size={20} color="#000" />
+              </TouchableOpacity>
+            </View>
 
-{/* Password */}
-<View style={styles.inputBox}>
-  <Text style={styles.inputText}>
-    Password: {password}
-  </Text>
+            {/* Password */}
+            <View style={styles.inputBox}>
+              <Text style={styles.inputText}>
+                Password: {password}
+              </Text>
 
-  <TouchableOpacity onPress={() => copyToClipboard(password)}>
-    <AntDesign name="copy" size={20} color="#000" />
-  </TouchableOpacity>
-</View>
+              <TouchableOpacity onPress={() => copyToClipboard(password)}>
+                <AntDesign name="copy" size={20} color="#000" />
+              </TouchableOpacity>
+            </View>
           </View>
 
           {/* Easy Actions */}
@@ -274,12 +289,11 @@ const number = supportItem?.supportNumber || null;
                 </View>
               </TouchableOpacity>
 
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={[styles.actionButton, styles.dullWhiteButton]}
                 onPress={() => {
-                  // Add your support action here
-                  // navigation.navigate("Support") or open support link
-                  Alert.alert("Support", "Support feature coming soon!");
+                  const url = `https://wa.me/${number.replace(/\D/g, "")}`;
+                  Linking.openURL(url).catch(() => alert("Unable to open WhatsApp"));
                 }}
               >
                 <View style={styles.actionContent}>
@@ -293,7 +307,7 @@ const number = supportItem?.supportNumber || null;
           <TouchableOpacity
             style={styles.trustMessage}
             onPress={() => {
-              Linking.openURL('https://Bpexch.live').catch((err) =>
+              Linking.openURL(loginUrl).catch((err) =>
                 console.error("Failed to open URL:", err)
               );
             }}
@@ -303,37 +317,37 @@ const number = supportItem?.supportNumber || null;
 
           <View style={styles.footerSpacer} />
         </ScrollView>
-{number && (
-  <TouchableOpacity 
-    onPress={() => {
-      const url = `https://wa.me/${number.replace(/\D/g, "")}`;
-      Linking.openURL(url).catch(() => alert("Unable to open WhatsApp"));
-    }}
-    style={{
-      position: "absolute",
-      bottom: 20,
-      right: 20,
-      justifyContent: 'center',
-      alignItems: 'center',
-      width: 50,
-      height: 50,
-      borderRadius: 30,
-      backgroundColor: "#25D366",
-      shadowColor: "#000",
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.25,
-      shadowRadius: 3.84,
-      elevation: 5,
-      marginBottom: 20,
-      paddingVertical: 10,
-      paddingHorizontal: 10,
-    }}
-  >
-    <Ionicons name="logo-whatsapp" size={30} color="#fff" />
-  </TouchableOpacity>
-)}
-         
-    
+        {number && (
+          <TouchableOpacity
+            onPress={() => {
+              const url = `https://wa.me/${number.replace(/\D/g, "")}`;
+              Linking.openURL(url).catch(() => alert("Unable to open WhatsApp"));
+            }}
+            style={{
+              position: "absolute",
+              bottom: 20,
+              right: 20,
+              justifyContent: 'center',
+              alignItems: 'center',
+              width: 50,
+              height: 50,
+              borderRadius: 30,
+              backgroundColor: "#25D366",
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.25,
+              shadowRadius: 3.84,
+              elevation: 5,
+              marginBottom: 20,
+              paddingVertical: 10,
+              paddingHorizontal: 10,
+            }}
+          >
+            <Ionicons name="logo-whatsapp" size={30} color="#fff" />
+          </TouchableOpacity>
+        )}
+
+
       </SafeAreaView>
 
       {/* Custom Slide-up Menu Modal */}
@@ -344,7 +358,7 @@ const number = supportItem?.supportNumber || null;
         onRequestClose={closeMenu}
       >
         <View style={styles.modalContainer}>
-          <Animated.View 
+          <Animated.View
             style={[
               styles.overlay,
               {
@@ -352,14 +366,14 @@ const number = supportItem?.supportNumber || null;
               }
             ]}
           >
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.overlayTouchable}
               activeOpacity={1}
               onPress={closeMenu}
             />
           </Animated.View>
-          
-          <Animated.View 
+
+          <Animated.View
             style={[
               styles.menuContainer,
               {
@@ -385,7 +399,7 @@ const number = supportItem?.supportNumber || null;
                     style={{ height: 50, width: 50 }}
                   />
                 </View>
-                <View style={{marginLeft: 8}}></View>
+                <View style={{ marginLeft: 8 }}></View>
                 <View style={styles.menuUserInfo}>
                   <Text style={styles.menuUserName}>
                     {username !== "N/A" ? username : "User"}
@@ -402,7 +416,7 @@ const number = supportItem?.supportNumber || null;
 
             <View style={styles.menuItems}>
               {/* Change Password Option */}
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.menuItem}
                 onPress={handleChangePassword}
                 activeOpacity={0.7}
@@ -418,7 +432,7 @@ const number = supportItem?.supportNumber || null;
               <View style={styles.menuDivider} />
 
               {/* Logout Option */}
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={[styles.menuItem, styles.logoutItem]}
                 onPress={handleLogout}
                 activeOpacity={0.7}
@@ -442,27 +456,27 @@ const number = supportItem?.supportNumber || null;
       </Modal>
 
       <Modal
-  transparent={true}
-  visible={copyModalVisible}
-  animationType="fade"
-  onRequestClose={() => setCopyModalVisible(false)}
->
-  <View style={styles.copyModalOverlay}>
-    <View style={styles.copyModalBox}>
-      <Image
-      tintColor={"#000"}
-       style={{height:20,width:20}}  source={require("../../assets/bag.png")}/>
-      
-      <Text style={styles.copyModalTitle}>You can now use this code at checkout</Text>
+        transparent={true}
+        visible={copyModalVisible}
+        animationType="fade"
+        onRequestClose={() => setCopyModalVisible(false)}
+      >
+        <View style={styles.copyModalOverlay}>
+          <View style={styles.copyModalBox}>
+            <Image
+              tintColor={"#000"}
+              style={{ height: 20, width: 20 }} source={require("../../assets/bag.png")} />
 
-      {/* Show copied text */}
-      <Text style={styles.copyModalText}>{copiedText}</Text>
+            <Text style={styles.copyModalTitle}>You can now use this code at checkout</Text>
 
-     
+            {/* Show copied text */}
+            <Text style={styles.copyModalText}>{copiedText}</Text>
 
-    </View>
-  </View>
-</Modal>
+
+
+          </View>
+        </View>
+      </Modal>
 
     </>
   );
@@ -535,26 +549,26 @@ const styles = StyleSheet.create({
     marginRight: 2
   },
   inputBox: {
-  backgroundColor: "rgba(255,255,255,0.15)",
-  borderRadius: 12,
-  paddingVertical: 4,
-  flexDirection: "row",
-  justifyContent: "space-between",
-  alignItems: "center",
-  marginTop: 12,
-},
+    backgroundColor: "rgba(255,255,255,0.15)",
+    borderRadius: 12,
+    paddingVertical: 4,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: 12,
+  },
 
-inputText: {
-  color: "#000",
-  fontSize: 14,
-  fontWeight: "600",
-  flex: 1, // 👈 important so text doesn’t push icon out
-},
+  inputText: {
+    color: "#000",
+    fontSize: 14,
+    fontWeight: "600",
+    flex: 1, // 👈 important so text doesn’t push icon out
+  },
 
-iconBtn: {
-  marginLeft: 10,
-  padding: 4,
-},
+  iconBtn: {
+    marginLeft: 10,
+    padding: 4,
+  },
   actionsSection: {
     marginBottom: 24,
   },
@@ -596,7 +610,7 @@ iconBtn: {
     elevation: 3, // For Android shadow
     overflow: 'hidden',
   },
-  
+
   actionContent: {
     alignItems: 'center',
     justifyContent: 'center',
@@ -604,13 +618,13 @@ iconBtn: {
     gap: 8,
     // flexDirection: 'row', // Icon and text side by side
   },
-  
+
   dullWhiteActionText: {
     color: '#374151', // Dark gray for better contrast
     fontSize: 12,
     fontWeight: '600',
   },
-  
+
   trustMessage: {
     backgroundColor: '#FEF3C7',
     padding: 14,
@@ -840,43 +854,43 @@ iconBtn: {
     alignItems: "center",
   },
   copyModalOverlay: {
-  flex: 1,
-  backgroundColor: "rgba(0,0,0,0.4)",
-  justifyContent: "center",
-  alignItems: "center",
-},
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.4)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
 
-copyModalBox: {
-  backgroundColor: "#fff",
-  padding: 20,
-  borderRadius: 16,
-  width: 260,
-  alignItems: "center",
-},
+  copyModalBox: {
+    backgroundColor: "#fff",
+    padding: 20,
+    borderRadius: 16,
+    width: 260,
+    alignItems: "center",
+  },
 
-copyModalTitle: {
-  fontSize: 16,
-  fontWeight: "600",
-  color: "#111827",
-  marginBottom: 6,
-  textAlign:'center'
-},
+  copyModalTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#111827",
+    marginBottom: 6,
+    textAlign: 'center'
+  },
 
-copyModalText: {
-  fontSize: 14,
-  color: "#2563EB",
-  marginBottom: 15,
-},
+  copyModalText: {
+    fontSize: 14,
+    color: "#2563EB",
+    marginBottom: 15,
+  },
 
-copyModalBtn: {
-  backgroundColor: "#2563EB",
-  paddingVertical: 6,
-  paddingHorizontal: 20,
-  borderRadius: 6,
-},
+  copyModalBtn: {
+    backgroundColor: "#2563EB",
+    paddingVertical: 6,
+    paddingHorizontal: 20,
+    borderRadius: 6,
+  },
 
-copyModalBtnText: {
-  color: "#fff",
-  fontSize: 14,
-},
+  copyModalBtnText: {
+    color: "#fff",
+    fontSize: 14,
+  },
 });

@@ -509,7 +509,7 @@ export default function SignupScreen({ navigation }) {
              
                 <Text style={styles.loginText}>
                   Already have an account?  
-                  <Text style={{color:"#999",}} >
+                  <Text style={{color:"red",}} >
                     Login
                 </Text>
                 </Text>
