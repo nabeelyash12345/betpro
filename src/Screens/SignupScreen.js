@@ -515,7 +515,18 @@ export default function SignupScreen({ navigation }) {
                 </Text>
               </TouchableOpacity>
             </Animated.View>
-
+{/* Terms & Conditions Link */}
+<TouchableOpacity
+  onPress={() => navigation.navigate("TermsScreen")}
+  style={{ marginTop: 10, alignItems: "center" }}
+>
+  <Text style={{ color: "#6B7280", fontSize: 13 }}>
+    By signing up, you agree to our{" "}
+    <Text style={{ color: "#000", fontWeight: "600" }}>
+      Terms & Conditions
+    </Text>
+  </Text>
+</TouchableOpacity>
             {/* Custom Modal - Only for errors */}
             <Modal
               transparent={true}
@@ -693,7 +704,7 @@ const styles = StyleSheet.create({
     color: "#C62828",
   },
   errorButton: {
-    backgroundColor: "#9C27B0",
+    backgroundColor: "#000",
     paddingVertical: 12,
     paddingHorizontal: 30,
     borderRadius: 8,

@@ -12,6 +12,7 @@ import TabNavigation from './Tabnavigation';
 import PaymentWithdrawal from '../Screens/PaymentWithdrawal';
 import ChangePasswordScreen from '../Screens/ChnagePassword';
 import OrderDetails from '../Screens/OrderDetails';
+import TermsScreen  from '../Screens/TermsScreen'
 
 const Stack = createNativeStackNavigator();
 
@@ -32,6 +33,8 @@ export default function RootStack() {
          
 
           <Stack.Screen name="SignupScreen" component={SignupScreen} />
+            <Stack.Screen name="TermsScreen" component={TermsScreen}/>
+
         </>
       ) : (
         // Logged in - show home screen
@@ -47,6 +50,7 @@ export default function RootStack() {
             <Stack.Screen name="PaymentWithdrawal" component={PaymentWithdrawal} />
             <Stack.Screen name="ChangePasswordScreen" component={ChangePasswordScreen} />
             <Stack.Screen name="OrderDetails" component={OrderDetails} />
+
             
             
             </>
