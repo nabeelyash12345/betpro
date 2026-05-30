@@ -1,8 +1,8 @@
 {
   "expo": {
-    "name": "Betpro",
-    "slug": "Betpro",
-    "version": "1.0.0",
+    "name": "Bprolive",
+    "slug": "Bprolive",
+    "version": "6.6.6",
     "orientation": "portrait",
     "icon": "./assets/lllllllllllll.png",
     "userInterfaceStyle": "light",
@@ -11,25 +11,39 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
+    "plugins": [
+      [
+        "expo-image-picker",
+        {
+          "cameraPermission": "This app uses the camera to take photos.",
+          "photosPermission": "This app accesses your gallery to select images."
+        }
+      ]
+    ],
     "ios": {
       "supportsTablet": true,
       "package": "com.betpro.myfirebaseapp"
     },
     "android": {
+       "versionCode": 6,
       "adaptiveIcon": {
         "backgroundColor": "#ffffff",
         "foregroundImage": "./assets/lllllllllllll.png",
         "backgroundImage": "./assets/lllllllllllll.png",
         "monochromeImage": "./assets/lllllllllllll.png"
       },
-      "package": "com.betpro.myfirebaseapp"
+      "package": "com.betpro.myfirebaseapp",
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "extra": {
       "eas": {
-        "projectId": "ee541d25-996c-42ce-9124-28218d834d1e"
+        "projectId": "f5fbd00c-5d09-4d27-9cb1-2605588e48dd"
       }
     }
   }

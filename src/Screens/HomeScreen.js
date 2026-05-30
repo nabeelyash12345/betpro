@@ -23,6 +23,8 @@ import { getUserOrders, listenToUserOrders } from "../services/orderService";
 import * as Clipboard from 'expo-clipboard';
 import { getSupportNumber } from "../services/support";
 import {  listenToWithdrawalTime } from "../services/withdrawalTime";
+import {  messageadmin  } from "../services/withdrawalTime";
+
 
 const { width, height } = Dimensions.get("window");
 
@@ -38,6 +40,7 @@ export default function HomeScreen({ navigation }) {
   const [copiedText, setCopiedText] = useState("");
   const [isSupported, setSupport] = useState("");
   const [withdrawaltime,setWithdrawalTime] = useState([]);
+  const [message ,setmessage]=useState()
   // Animation values
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(300)).current;
@@ -154,6 +157,16 @@ export default function HomeScreen({ navigation }) {
     });
   };
 
+   useEffect(() => {
+    const unsubscribe = messageadmin((result) => {
+      if (result.success) {
+        setmessage(result.data);
+      }
+    });
+
+    return () => unsubscribe(); // cleanup on unmount
+  }, []);
+
   const handleChangePassword = () => {
     closeMenu();
     // Navigate to change password screen
@@ -190,6 +203,10 @@ export default function HomeScreen({ navigation }) {
       ]
     );
   };
+  console.log(message)
+
+  const alert = message?.find(item => item.alertNote);
+
 
   const openWhatsApp = (phone) => {
     const url = `https://wa.me/${phone.replace(/\D/g, "")}`; // remove any non-digit characters
@@ -215,7 +232,7 @@ export default function HomeScreen({ navigation }) {
         >
           <View style={styles.headerstyles}>
             <View>
-              <Text style={styles.headertext}>Betpro Official</Text>
+              <Text style={styles.headertext}>Bprolive Official</Text>
             </View>
             <TouchableOpacity style={styles.logoutBtn} onPress={openMenu}>
               <Entypo name="log-out" size={20} color="black" />
@@ -239,7 +256,7 @@ export default function HomeScreen({ navigation }) {
                   style={{ height: 40, width: 40 }}
                 />
               </View>
-              <Text style={styles.title}>Betpro Official</Text>
+              <Text style={styles.title}>Bprolive Official</Text>
             </View>
 
             {/* Username */}
@@ -289,18 +306,23 @@ export default function HomeScreen({ navigation }) {
                 </View>
               </TouchableOpacity>
 
-              <TouchableOpacity
-                style={[styles.actionButton, styles.dullWhiteButton]}
-                onPress={() => {
-                  const url = `https://wa.me/${number.replace(/\D/g, "")}`;
-                  Linking.openURL(url).catch(() => alert("Unable to open WhatsApp"));
-                }}
-              >
-                <View style={styles.actionContent}>
-                  <Ionicons name="chatbubble-ellipses-outline" size={20} color="#374151" />
-                  <Text style={styles.dullWhiteActionText}>Support</Text>
-                </View>
-              </TouchableOpacity>
+             <TouchableOpacity
+  style={[styles.actionButton, styles.dullWhiteButton]}
+  onPress={() => {
+    const phone = number?.replace(/\D/g, "");
+
+    const message = "Hello, I need support"; // 👈 your message
+
+    const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+
+    Linking.openURL(url).catch(() => alert("Unable to open WhatsApp"));
+  }}
+>
+  <View style={styles.actionContent}>
+    <Ionicons name="chatbubble-ellipses-outline" size={20} color="#374151" />
+    <Text style={styles.dullWhiteActionText}>Support</Text>
+  </View>
+</TouchableOpacity>
             </View>
           </View>
 
@@ -314,38 +336,51 @@ export default function HomeScreen({ navigation }) {
           >
             <Text style={styles.trustText}>Login here</Text>
           </TouchableOpacity>
-
+          {alert?.alertNote &&
+            <Text style={styles.alertText}>
+  {alert?.alertNote}
+</Text>
+}
           <View style={styles.footerSpacer} />
+
         </ScrollView>
-        {number && (
-          <TouchableOpacity
-            onPress={() => {
-              const url = `https://wa.me/${number.replace(/\D/g, "")}`;
-              Linking.openURL(url).catch(() => alert("Unable to open WhatsApp"));
-            }}
-            style={{
-              position: "absolute",
-              bottom: 20,
-              right: 20,
-              justifyContent: 'center',
-              alignItems: 'center',
-              width: 50,
-              height: 50,
-              borderRadius: 30,
-              backgroundColor: "#25D366",
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.25,
-              shadowRadius: 3.84,
-              elevation: 5,
-              marginBottom: 20,
-              paddingVertical: 10,
-              paddingHorizontal: 10,
-            }}
-          >
-            <Ionicons name="logo-whatsapp" size={30} color="#fff" />
-          </TouchableOpacity>
-        )}
+
+
+      {number && (
+  <TouchableOpacity
+    onPress={() => {
+      const cleanNumber = number.replace(/\D/g, "");
+
+      const message = "Hi, I need some Help";
+      const url = `https://wa.me/${cleanNumber}?text=${encodeURIComponent(message)}`;
+
+      Linking.openURL(url).catch(() =>
+        alert("Unable to open WhatsApp")
+      );
+    }}
+    style={{
+      position: "absolute",
+      bottom: 20,
+      right: 20,
+      justifyContent: "center",
+      alignItems: "center",
+      width: 50,
+      height: 50,
+      borderRadius: 30,
+      backgroundColor: "#25D366",
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.25,
+      shadowRadius: 3.84,
+      elevation: 5,
+      marginBottom: 20,
+      paddingVertical: 10,
+      paddingHorizontal: 10,
+    }}
+  >
+    <Ionicons name="logo-whatsapp" size={30} color="#fff" />
+  </TouchableOpacity>
+)}
 
 
       </SafeAreaView>
@@ -467,7 +502,7 @@ export default function HomeScreen({ navigation }) {
               tintColor={"#000"}
               style={{ height: 20, width: 20 }} source={require("../../assets/bag.png")} />
 
-            <Text style={styles.copyModalTitle}>You can now use this code at checkout</Text>
+            <Text style={styles.copyModalTitle}>copied successfully </Text>
 
             {/* Show copied text */}
             <Text style={styles.copyModalText}>{copiedText}</Text>
@@ -492,6 +527,18 @@ const styles = StyleSheet.create({
     paddingTop: 20,
     paddingBottom: 40,
   },
+    alertText: {
+    fontSize: 14,
+    color: "#D32F2F",        // red alert color
+    backgroundColor: "#FFEBEE",
+    padding: 10,
+    borderRadius: 8,
+    marginVertical: 8,
+    fontWeight: "500",
+    textAlign:"center"
+  },
+
+  
   logostyes: {
     backgroundColor: "#9C27B0",
     height: 40,

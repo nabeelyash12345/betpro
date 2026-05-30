@@ -5,6 +5,7 @@ import { useAuth } from "../context/AuthContext";
 import { FontAwesome } from "@expo/vector-icons";
 import { getSupportNumber } from "../services/support";
 
+
 const HomeInActiveUser = ({ navigation }) => {
     const { user, userProfile, logout, loading } = useAuth();
     const [menuVisible, setMenuVisible] = useState(false);

@@ -13,7 +13,8 @@ import {
   Platform,
   Animated,
   Dimensions,
-  StatusBar
+  StatusBar,
+  Linking
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "../context/AuthContext";
@@ -509,24 +510,56 @@ export default function SignupScreen({ navigation }) {
              
                 <Text style={styles.loginText}>
                   Already have an account?  
-                  <Text style={{color:"red",}} >
+                  <Text style={{color:"red", fontWeight:'800', fontSize:15}} >
                     Login
                 </Text>
                 </Text>
               </TouchableOpacity>
             </Animated.View>
 {/* Terms & Conditions Link */}
-<TouchableOpacity
-  onPress={() => navigation.navigate("TermsScreen")}
-  style={{ marginTop: 10, alignItems: "center" }}
->
-  <Text style={{ color: "#6B7280", fontSize: 13 }}>
+<View style={{ marginTop: 10, alignItems: "center" }}>
+  <Text style={{ color: "#6B7280", fontSize: 13, textAlign: "center" }}>
     By signing up, you agree to our{" "}
-    <Text style={{ color: "#000", fontWeight: "600" }}>
-      Terms & Conditions
+
+    <Text
+      style={{ color: "#000", fontWeight: "600" }}
+      onPress={() => Linking.openURL("https://bp-policy.vercel.app/")}
+    >
+      Privacy Policy
     </Text>
   </Text>
+</View>
+
+   <TouchableOpacity
+  onPress={() => {
+    const whatsappNumber = "+447403678949"; // Pakistan number with country code
+    const message = "Hi, I need some Help";
+
+    const url = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(
+      message
+    )}`;
+
+    Linking.openURL(url).catch(() =>
+      alert("Unable to open WhatsApp")
+    );
+  }}
+  style={{
+    position: "absolute",
+    bottom: 50,
+    right: 20,
+    justifyContent: "center",
+    alignItems: "center",
+    width: 50,
+    height: 50,
+    borderRadius: 30,
+    backgroundColor: "#25D366",
+    elevation: 5,
+  }}
+>
+  <Ionicons name="logo-whatsapp" size={30} color="#fff" />
 </TouchableOpacity>
+
+
             {/* Custom Modal - Only for errors */}
             <Modal
               transparent={true}

@@ -285,7 +285,51 @@ export default function Withdraw({ navigation }) {
             </View>
 
             {/* Instructions Section (English & Urdu) */}
-            <View style={styles.instructionsCard}>
+           
+
+            {/* Payment Method Selector */}
+            <View style={styles.methodSection}>
+              <Text style={styles.sectionTitle}>Select Payment Method</Text>
+              <View style={styles.methodButtons}>
+                <TouchableOpacity
+                  style={[
+                    styles.methodButton,
+                    selectedMethod === "easypaisa" && styles.methodButtonActive,
+                  ]}
+                  onPress={() => setSelectedMethod("easypaisa")}
+                >
+                  <FontAwesome5 name="mobile-alt" size={17} color={selectedMethod === "easypaisa" ? "#fff" : "#6B7280"} />
+                  <Text style={[styles.methodText, selectedMethod === "easypaisa" && styles.methodTextActive]}>
+                    EasyPaisa
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    styles.methodButton,
+                    selectedMethod === "jazzcash" && styles.methodButtonActive,
+                  ]}
+                  onPress={() => setSelectedMethod("jazzcash")}
+                >
+                  <FontAwesome5 name="mobile-alt" size={17} color={selectedMethod === "jazzcash" ? "#fff" : "#6B7280"} />
+                  <Text style={[styles.methodText, selectedMethod === "jazzcash" && styles.methodTextActive]}>
+                    JazzCash
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    styles.methodButton,
+                    selectedMethod === "bank" && styles.methodButtonActive,
+                  ]}
+                  onPress={() => setSelectedMethod("bank")}
+                >
+                  <MaterialIcons name="account-balance" size={17} color={selectedMethod === "bank" ? "#fff" : "#6B7280"} />
+                  <Text style={[styles.methodText, selectedMethod === "bank" && styles.methodTextActive]}>
+                    Bank 
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+ <View style={styles.instructionsCard}>
               <Text style={styles.instructionsTitle}>Account Details {selectedMethod}</Text>
               { selectedMethod === "easypaisa" &&(
               <Text style={styles.instructionsText}>Title: {easyPaisaNumber?.accountTitle }</Text>
@@ -343,50 +387,6 @@ export default function Withdraw({ navigation }) {
 
             
             </View>
-
-            {/* Payment Method Selector */}
-            <View style={styles.methodSection}>
-              <Text style={styles.sectionTitle}>Select Payment Method</Text>
-              <View style={styles.methodButtons}>
-                <TouchableOpacity
-                  style={[
-                    styles.methodButton,
-                    selectedMethod === "easypaisa" && styles.methodButtonActive,
-                  ]}
-                  onPress={() => setSelectedMethod("easypaisa")}
-                >
-                  <FontAwesome5 name="mobile-alt" size={17} color={selectedMethod === "easypaisa" ? "#fff" : "#6B7280"} />
-                  <Text style={[styles.methodText, selectedMethod === "easypaisa" && styles.methodTextActive]}>
-                    EasyPaisa
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[
-                    styles.methodButton,
-                    selectedMethod === "jazzcash" && styles.methodButtonActive,
-                  ]}
-                  onPress={() => setSelectedMethod("jazzcash")}
-                >
-                  <FontAwesome5 name="mobile-alt" size={17} color={selectedMethod === "jazzcash" ? "#fff" : "#6B7280"} />
-                  <Text style={[styles.methodText, selectedMethod === "jazzcash" && styles.methodTextActive]}>
-                    JazzCash
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[
-                    styles.methodButton,
-                    selectedMethod === "bank" && styles.methodButtonActive,
-                  ]}
-                  onPress={() => setSelectedMethod("bank")}
-                >
-                  <MaterialIcons name="account-balance" size={17} color={selectedMethod === "bank" ? "#fff" : "#6B7280"} />
-                  <Text style={[styles.methodText, selectedMethod === "bank" && styles.methodTextActive]}>
-                    Bank 
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-
             {/* Form Fields */}
             <View style={styles.formCard}>
               <Text style={styles.inputLabel}>Amount (PKR)</Text>
@@ -480,6 +480,7 @@ export default function Withdraw({ navigation }) {
       {/* Success Modal */}
       <Modal
         visible={showSuccessModal}
+        // visible={true}
         transparent={true}
         animationType="fade"
         onRequestClose={() => setShowSuccessModal(false)}
@@ -491,7 +492,7 @@ export default function Withdraw({ navigation }) {
               <Ionicons name="checkmark-circle" size={70} color="#10B981" />
             </View>
             
-            <Text style={styles.successModalTitle}>Withdrawal Request Submitted!</Text>
+            <Text style={styles.successModalTitle}>Deposit Request Submitted!</Text>
             
             <View style={styles.successModalDetails}>
               <View style={styles.detailRow}>
@@ -540,7 +541,7 @@ export default function Withdraw({ navigation }) {
             tintColor={"#000"}
              style={{height:20,width:20}}  source={require("../../assets/bag.png")}/>
             
-            <Text style={styles.copyModalTitle}>You can now use this code at checkout</Text>
+            <Text style={styles.copyModalTitle}>copied successfully </Text>
       
             {/* Show copied text */}
             <Text style={styles.copyModalText}>{copiedText}</Text>
@@ -796,7 +797,7 @@ const styles = StyleSheet.create({
   successModalContainer: {
     backgroundColor: '#FFFFFF',
     borderRadius: 20,
-    padding: 24,
+    padding: 12,
     width: width - 48,
     maxWidth: 400,
     alignItems: 'center',
@@ -815,6 +816,7 @@ const styles = StyleSheet.create({
     color: '#1F2937',
     textAlign: 'center',
     marginBottom: 20,
+    paddingHorizontal:12
   },
   successModalDetails: {
     backgroundColor: '#F9FAFB',
@@ -829,7 +831,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   detailLabel: {
-    fontSize: 14,
+    fontSize: 12,
     color: '#6B7280',
     fontWeight: '500',
   },

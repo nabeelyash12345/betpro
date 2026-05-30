@@ -22,7 +22,7 @@ import { Entypo, Ionicons, MaterialIcons, FontAwesome5 } from "@expo/vector-icon
 import { LinearGradient } from "expo-linear-gradient";
 import * as ImagePicker from 'expo-image-picker';
 import { useAuth } from "../context/AuthContext";
-import { createOrder } from "../services/orderService";
+import { createOrder, listenToUserOrders } from "../services/orderService";
 import { listenToWithdrawalTime } from "../services/withdrawalTime";
 
 const { width } = Dimensions.get('window');
@@ -42,6 +42,10 @@ export default function PaymentWithdrawal({ navigation }) {
   const [showImageModal, setShowImageModal] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [withdrawaltime, setWithdrawalTime] = useState([]);
+
+    const [deposits, setDeposits] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [refreshing, setRefreshing] = useState(false);
   
   // State for success modal
   const [showSuccessModal, setShowSuccessModal] = useState(false);
@@ -70,7 +74,7 @@ export default function PaymentWithdrawal({ navigation }) {
 
   const timeWithdrawal = withdrawaltime?.find(item => item?.url) || null;
 
-  console.log("withdrawaltime", timeWithdrawal)
+
 
   // Helper function to check if withdrawal is allowed
   const isWithdrawalAllowed = () => {
@@ -121,6 +125,38 @@ export default function PaymentWithdrawal({ navigation }) {
       return currentTimeInMinutes >= fromTimeInMinutes || currentTimeInMinutes <= toTimeInMinutes;
     }
   };
+
+   useEffect(() => {
+      if (!user) return;
+  
+      // Set up real-time listener for orders
+      const unsubscribe = listenToUserOrders(user.uid, (result) => {
+        if (result.success) {
+          // Filter only deposits (isDeposit === true)
+          const depositOrders = result.orders.filter(order => order.isDeposit === false);
+          setDeposits(depositOrders);
+        }
+        setLoading(false);
+        setRefreshing(false);
+      });
+  
+      return () => unsubscribe();
+    }, [user]);
+
+
+    //  console.log("neww",deposits)
+const item = deposits.find(item => item);
+
+const hasSubmittedInLast24Hours = item => {
+  if (!item?.updatedAt) return false;
+
+  const updatedTime = new Date(item.updatedAt).getTime();
+  const currentTime = new Date().getTime();
+
+  const diffInHours = (currentTime - updatedTime) / (1000 * 60 * 60);
+
+  return diffInHours < 24;
+};
 
   // Request permission and pick image
   const pickImage = async () => {
@@ -205,19 +241,26 @@ export default function PaymentWithdrawal({ navigation }) {
 
   const handleSubmit = async () => {
     // Check if withdrawal is allowed based on time
-    if (!isWithdrawalAllowed()) {
-      // Show time restriction modal instead of alert
-      setTimeRestrictionData({
-        fromTime: timeWithdrawal?.fromtime || 'N/A',
-        toTime: timeWithdrawal?.toTime || 'N/A'
-      });
-      setShowTimeRestrictionModal(true);
-      return;
-    }
+  //     if (hasSubmittedInLast24Hours(item)) {
+  //   Alert.alert(
+  //     "Already Submitted",
+  //     "You can submit another withdrawal request after 24 hours."
+  //   );
+  //   return;
+  // }
+  //   if (!isWithdrawalAllowed()) {
+  //     // Show time restriction modal instead of alert
+  //     setTimeRestrictionData({
+  //       fromTime: timeWithdrawal?.fromtime || 'N/A',
+  //       toTime: timeWithdrawal?.toTime || 'N/A'
+  //     });
+  //     setShowTimeRestrictionModal(true);
+  //     return;
+  //   }
 
     if (selectedMethod === "easypaisa" || selectedMethod === "jazzcash") {
       if (!mobileNumber.trim() || mobileNumber.length < 10) {
-        Alert.alert("Error", "Please enter a valid mobile number");
+        Alert.alert("Error", "Pleas inter your account info");
         return;
       }
     } 
@@ -512,6 +555,7 @@ export default function PaymentWithdrawal({ navigation }) {
       {/* Success Modal for Withdrawal */}
       <Modal
         visible={showSuccessModal}
+        // visible={true}
         transparent={true}
         animationType="fade"
         onRequestClose={() => setShowSuccessModal(false)}
@@ -872,7 +916,7 @@ const styles = StyleSheet.create({
   successModalContainer: {
     backgroundColor: '#FFFFFF',
     borderRadius: 20,
-    padding: 24,
+    padding: 12,
     width: width - 48,
     maxWidth: 400,
     alignItems: 'center',
@@ -891,6 +935,7 @@ const styles = StyleSheet.create({
     color: '#1F2937',
     textAlign: 'center',
     marginBottom: 20,
+    paddingHorizontal:4
   },
   successModalDetails: {
     backgroundColor: '#F9FAFB',
@@ -905,12 +950,12 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   detailLabel: {
-    fontSize: 14,
+    fontSize: 12,
     color: '#6B7280',
     fontWeight: '500',
   },
   detailValue: {
-    fontSize: 14,
+    fontSize: 11,
     color: '#1F2937',
     fontWeight: '600',
   },

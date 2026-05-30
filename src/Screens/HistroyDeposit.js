@@ -139,6 +139,7 @@ const HistoryDeposit = ({ navigation }) => {
   // Render deposit card (exactly same as home screen order card)
   const renderDepositCard = ({ item: deposit }) => {
     const type = getTransactionType(deposit);
+    console.log(deposit)
   
     return (
       <TouchableOpacity 
@@ -171,6 +172,9 @@ const HistoryDeposit = ({ navigation }) => {
             <Text style={styles.detailLabel}>Amount:</Text>
             <Text style={[styles.detailValue, { fontWeight: 'bold', color: type.color }]}>
               {formatAmount(deposit.amount)}
+              {deposit?.bankName && (
+                <Text>( {deposit?.bank} )</Text>
+              )} 
             </Text>
           </View>
           <View style={styles.detailRow}>

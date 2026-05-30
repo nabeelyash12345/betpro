@@ -11,9 +11,11 @@ import {
   Image,
   KeyboardAvoidingView,
   Platform,
-  ScrollView
+  ScrollView,
+  Linking
 } from "react-native";
 import { useAuth } from "../context/AuthContext";
+import { Entypo, Ionicons, MaterialIcons, FontAwesome5, AntDesign, MaterialCommunityIcons, FontAwesome6 } from "@expo/vector-icons";
 
 export default function LoginScreen({ navigation }) {
   const [email, setEmail] = useState("");
@@ -123,6 +125,34 @@ export default function LoginScreen({ navigation }) {
           <Text style={styles.signupText}>SIGN UP</Text>
         </TouchableOpacity>
         </View>
+       <TouchableOpacity
+  onPress={() => {
+    const whatsappNumber = "+447403678949"; // Pakistan number with country code
+    const message = "Hi, I need some Help";
+
+    const url = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(
+      message
+    )}`;
+
+    Linking.openURL(url).catch(() =>
+      alert("Unable to open WhatsApp")
+    );
+  }}
+  style={{
+    position: "absolute",
+    bottom: 50,
+    right: 20,
+    justifyContent: "center",
+    alignItems: "center",
+    width: 50,
+    height: 50,
+    borderRadius: 30,
+    backgroundColor: "#25D366",
+    elevation: 5,
+  }}
+>
+  <Ionicons name="logo-whatsapp" size={30} color="#fff" />
+</TouchableOpacity>
       </View>
 
       {/* Error Modal */}

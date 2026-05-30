@@ -20,3 +20,22 @@ export const listenToWithdrawalTime = (callback) => {
 
   return unsubscribe; // important for cleanup
 };
+
+
+export const messageadmin = (callback) => {
+  const banksRef = ref(database, 'aleartNotes');
+
+  const unsubscribe = onValue(banksRef, (snapshot) => {
+    if (snapshot.exists()) {
+      const banks = Object.values(snapshot.val());
+      callback({ success: true, data: banks });
+    } else {
+      callback({ success: true, data: [] });
+    }
+  }, (error) => {
+    console.error('Error listening withdrawal times:', error);
+    callback({ success: false, error: error.message });
+  });
+
+  return unsubscribe; // important for cleanup
+};

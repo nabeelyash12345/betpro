@@ -136,6 +136,7 @@ const Withdrawal = ({ navigation }) => {
   // Render deposit card (exactly same as home screen order card)
   const renderDepositCard = ({ item: deposit }) => {
     const type = getTransactionType(deposit);
+    
  
     return (
       <TouchableOpacity 
@@ -172,7 +173,9 @@ const Withdrawal = ({ navigation }) => {
           </View>
           <View style={styles.detailRow}>
             <Text style={styles.detailLabel}>Method:</Text>
-            <Text style={styles.detailValue}>{deposit.paymentMethod}</Text>
+            <Text style={styles.detailValue}>{deposit.paymentMethod} {deposit?.bankName && (
+  <Text>( {deposit?.bankName} )</Text>
+)} </Text>
           </View>
           <View style={styles.detailRow}>
             <Text style={styles.detailLabel}>Date:</Text>
@@ -198,7 +201,7 @@ const Withdrawal = ({ navigation }) => {
     <>
       <View style={styles.statsContainer}>
         <View style={styles.statCard}>
-          <Text style={styles.statLabel}>Total Deposits</Text>
+          <Text style={styles.statLabel}>Total Withdraw</Text>
           <Text style={styles.statValue}>
             {formatAmount(totalDeposits)}
           </Text>

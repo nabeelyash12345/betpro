@@ -13,6 +13,7 @@ import PaymentWithdrawal from '../Screens/PaymentWithdrawal';
 import ChangePasswordScreen from '../Screens/ChnagePassword';
 import OrderDetails from '../Screens/OrderDetails';
 import TermsScreen  from '../Screens/TermsScreen'
+import PrivacyPolicyScreen from "../Screens/PrivacyPolicyScreen"
 
 const Stack = createNativeStackNavigator();
 
@@ -33,7 +34,10 @@ export default function RootStack() {
          
 
           <Stack.Screen name="SignupScreen" component={SignupScreen} />
+          
             <Stack.Screen name="TermsScreen" component={TermsScreen}/>
+            <Stack.Screen name="PrivacyPolicyScreen" component={PrivacyPolicyScreen}/>
+
 
         </>
       ) : (
