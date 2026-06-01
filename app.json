@@ -2,7 +2,7 @@
   "expo": {
     "name": "Bprolive",
     "slug": "Bprolive",
-    "version": "6.6.6",
+    "version": "10.10.10",
     "orientation": "portrait",
     "icon": "./assets/lllllllllllll.png",
     "userInterfaceStyle": "light",
@@ -25,7 +25,7 @@
       "package": "com.betpro.myfirebaseapp"
     },
     "android": {
-       "versionCode": 6,
+       "versionCode": 10,
       "adaptiveIcon": {
         "backgroundColor": "#ffffff",
         "foregroundImage": "./assets/lllllllllllll.png",

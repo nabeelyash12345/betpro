@@ -114,6 +114,14 @@ export default function LoginScreen({ navigation }) {
           )}
         </TouchableOpacity>
 
+         <TouchableOpacity
+  onPress={() => navigation.navigate("ForgotPasswordScreen")}
+>
+  <Text style={{ color: "#000" ,   alignSelf:"flex-end" }}>
+    Forgot Password?
+  </Text>
+</TouchableOpacity>
+
         <View
         style={styles.signupBtn}
         >
@@ -125,6 +133,7 @@ export default function LoginScreen({ navigation }) {
           <Text style={styles.signupText}>SIGN UP</Text>
         </TouchableOpacity>
         </View>
+       
        <TouchableOpacity
   onPress={() => {
     const whatsappNumber = "+447403678949"; // Pakistan number with country code
@@ -140,7 +149,7 @@ export default function LoginScreen({ navigation }) {
   }}
   style={{
     position: "absolute",
-    bottom: 50,
+    bottom: 40,
     right: 20,
     justifyContent: "center",
     alignItems: "center",

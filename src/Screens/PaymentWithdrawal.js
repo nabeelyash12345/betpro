@@ -77,54 +77,43 @@ export default function PaymentWithdrawal({ navigation }) {
 
 
   // Helper function to check if withdrawal is allowed
-  const isWithdrawalAllowed = () => {
-    if (!timeWithdrawal || !timeWithdrawal.fromtime || !timeWithdrawal.toTime) {
-      // If no time data exists, block withdrawals
-      return false;
-    }
+ const isWithdrawalAllowed = () => {
+  if (!timeWithdrawal || !timeWithdrawal.fromtime || !timeWithdrawal.toTime) {
+    return false;
+  }
 
-    const now = new Date();
-    const currentHours = now.getHours();
-    const currentMinutes = now.getMinutes();
-    const currentTimeInMinutes = currentHours * 60 + currentMinutes;
+  const now = new Date();
+  const currentHours = now.getHours();
+  const currentMinutes = now.getMinutes();
+  const currentTimeInMinutes = currentHours * 60 + currentMinutes;
 
-    // Parse fromtime (e.g., "02:44 AM")
-    const fromTimeParts = timeWithdrawal.fromtime.match(/(\d+):(\d+)\s*(AM|PM)/i);
-    if (!fromTimeParts) return false;
-    
-    let fromHours = parseInt(fromTimeParts[1]);
-    const fromMinutes = parseInt(fromTimeParts[2]);
-    const fromPeriod = fromTimeParts[3].toUpperCase();
-    
-    // Convert to 24-hour format
-    if (fromPeriod === 'PM' && fromHours !== 12) fromHours += 12;
-    if (fromPeriod === 'AM' && fromHours === 12) fromHours = 0;
-    
-    const fromTimeInMinutes = fromHours * 60 + fromMinutes;
+  // Parse fromtime
+  const fromTimeParts = timeWithdrawal.fromtime.match(/(\d+):(\d+)\s*(AM|PM)/i);
+  if (!fromTimeParts) return false;
+  let fromHours = parseInt(fromTimeParts[1]);
+  const fromMinutes = parseInt(fromTimeParts[2]);
+  const fromPeriod = fromTimeParts[3].toUpperCase();
+  if (fromPeriod === 'PM' && fromHours !== 12) fromHours += 12;
+  if (fromPeriod === 'AM' && fromHours === 12) fromHours = 0;
+  const fromTimeInMinutes = fromHours * 60 + fromMinutes;
 
-    // Parse toTime (e.g., "10:44 PM")
-    const toTimeParts = timeWithdrawal.toTime.match(/(\d+):(\d+)\s*(AM|PM)/i);
-    if (!toTimeParts) return false;
-    
-    let toHours = parseInt(toTimeParts[1]);
-    const toMinutes = parseInt(toTimeParts[2]);
-    const toPeriod = toTimeParts[3].toUpperCase();
-    
-    // Convert to 24-hour format
-    if (toPeriod === 'PM' && toHours !== 12) toHours += 12;
-    if (toPeriod === 'AM' && toHours === 12) toHours = 0;
-    
-    const toTimeInMinutes = toHours * 60 + toMinutes;
+  // Parse toTime
+  const toTimeParts = timeWithdrawal.toTime.match(/(\d+):(\d+)\s*(AM|PM)/i);
+  if (!toTimeParts) return false;
+  let toHours = parseInt(toTimeParts[1]);
+  const toMinutes = parseInt(toTimeParts[2]);
+  const toPeriod = toTimeParts[3].toUpperCase();
+  if (toPeriod === 'PM' && toHours !== 12) toHours += 12;
+  if (toPeriod === 'AM' && toHours === 12) toHours = 0;
+  const toTimeInMinutes = toHours * 60 + toMinutes;
 
-    // Check if current time is within the allowed window
-    if (fromTimeInMinutes <= toTimeInMinutes) {
-      // Same day window
-      return currentTimeInMinutes >= fromTimeInMinutes && currentTimeInMinutes <= toTimeInMinutes;
-    } else {
-      // Overnight window
-      return currentTimeInMinutes >= fromTimeInMinutes || currentTimeInMinutes <= toTimeInMinutes;
-    }
-  };
+  // Time range check (handles overnight windows)
+  if (fromTimeInMinutes <= toTimeInMinutes) {
+    return currentTimeInMinutes >= fromTimeInMinutes && currentTimeInMinutes <= toTimeInMinutes;
+  } else {
+    return currentTimeInMinutes >= fromTimeInMinutes || currentTimeInMinutes <= toTimeInMinutes;
+  }
+};
 
    useEffect(() => {
       if (!user) return;
@@ -144,18 +133,25 @@ export default function PaymentWithdrawal({ navigation }) {
     }, [user]);
 
 
-    //  console.log("neww",deposits)
+     console.log("neww",deposits)
 const item = deposits.find(item => item);
+console.log(item)
 
 const hasSubmittedInLast24Hours = item => {
   if (!item?.updatedAt) return false;
 
-  const updatedTime = new Date(item.updatedAt).getTime();
-  const currentTime = new Date().getTime();
+  const updatedDate = new Date(item.updatedAt);
+  const now = new Date();
 
-  const diffInHours = (currentTime - updatedTime) / (1000 * 60 * 60);
+  const diffInHours =
+    (now.getTime() - updatedDate.getTime()) / (1000 * 60 * 60);
 
-  return diffInHours < 24;
+  const isSameDay =
+    updatedDate.getDate() === now.getDate() &&
+    updatedDate.getMonth() === now.getMonth() &&
+    updatedDate.getFullYear() === now.getFullYear();
+
+  return diffInHours < 24 && isSameDay;
 };
 
   // Request permission and pick image
@@ -241,22 +237,21 @@ const hasSubmittedInLast24Hours = item => {
 
   const handleSubmit = async () => {
     // Check if withdrawal is allowed based on time
-  //     if (hasSubmittedInLast24Hours(item)) {
-  //   Alert.alert(
-  //     "Already Submitted",
-  //     "You can submit another withdrawal request after 24 hours."
-  //   );
-  //   return;
-  // }
-  //   if (!isWithdrawalAllowed()) {
-  //     // Show time restriction modal instead of alert
-  //     setTimeRestrictionData({
-  //       fromTime: timeWithdrawal?.fromtime || 'N/A',
-  //       toTime: timeWithdrawal?.toTime || 'N/A'
-  //     });
-  //     setShowTimeRestrictionModal(true);
-  //     return;
-  //   }
+      if (hasSubmittedInLast24Hours(item)) {
+    Alert.alert(
+      "You have already made the withdrawal today . Now you can place Another Withdrawal request tomorrow During Withdrawal timing"
+    );
+    return;
+  }
+    if (!isWithdrawalAllowed()) {
+      // Show time restriction modal instead of alert
+      setTimeRestrictionData({
+        fromTime: timeWithdrawal?.fromtime || 'N/A',
+        toTime: timeWithdrawal?.toTime || 'N/A'
+      });
+      setShowTimeRestrictionModal(true);
+      return;
+    }
 
     if (selectedMethod === "easypaisa" || selectedMethod === "jazzcash") {
       if (!mobileNumber.trim() || mobileNumber.length < 10) {
