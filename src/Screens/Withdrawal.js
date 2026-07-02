@@ -1,4 +1,4 @@
-
+// src/Screens/Withdrawal.js
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -13,25 +13,24 @@ import {
 } from 'react-native';
 import { Ionicons, FontAwesome5 } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
-import { getUserOrders, listenToUserOrders } from '../services/orderService';
+import { getUserWithdrawals, listenToUserWithdrawals } from '../services/Withdrawalservice';
 
 const { width } = Dimensions.get("window");
 
 const Withdrawal = ({ navigation }) => {
   const { user } = useAuth();
-  const [deposits, setDeposits] = useState([]);
+  const [withdrawals, setWithdrawals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     if (!user) return;
 
-    // Set up real-time listener for orders
-    const unsubscribe = listenToUserOrders(user.uid, (result) => {
+    // Set up real-time listener for withdrawals only — no more downloading
+    // deposits (with their screenshot URLs etc.) just to filter them out.
+    const unsubscribe = listenToUserWithdrawals(user.uid, (result) => {
       if (result.success) {
-        // Filter only deposits (isDeposit === true)
-        const depositOrders = result.orders.filter(order => order.isDeposit === false);
-        setDeposits(depositOrders);
+        setWithdrawals(result.orders);
       }
       setLoading(false);
       setRefreshing(false);
@@ -90,77 +89,70 @@ const Withdrawal = ({ navigation }) => {
     }
   };
 
- const formatDate = (dateString) => {
-  const date = new Date(dateString);
-  const now = new Date();
-  
-  // Reset time to midnight for accurate day comparison
-  const dateOnly = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-  const nowOnly = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  
-  const diffTime = nowOnly - dateOnly;
-  const diffDays = diffTime / (1000 * 60 * 60 * 24);
-  
-  // Format date (Mar 26, 2026)
-  const formattedDate = date.toLocaleDateString('en-PK', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric'
-  });
- 
-  // Format time (12:06 PM)
-  const timeString = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  
-  if (diffDays === 0) {
- 
-    return `${formattedDate} at ${timeString}`;
-  }
-};
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    const now = new Date();
 
+    // Reset time to midnight for accurate day comparison
+    const dateOnly = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    const nowOnly = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    const diffTime = nowOnly - dateOnly;
+    const diffDays = diffTime / (1000 * 60 * 60 * 24);
+
+    // Format date (Mar 26, 2026)
+    const formattedDate = date.toLocaleDateString('en-PK', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    });
+
+    // Format time (12:06 PM)
+    const timeString = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+    // Always return a value — previously this fell through to `undefined`
+    // for any date that wasn't today.
+    return `${formattedDate} at ${timeString}`;
+  };
 
   const formatAmount = (amount) => {
     return `PKR ${amount?.toLocaleString() || 0}`;
   };
 
-  const getTransactionType = (order) => {
-    if (order.isDeposit) {
-      return { text: 'Deposit', icon: 'arrow-down', color: '#10B981' };
-    } else {
-      return { text: 'Withdrawal', icon: 'arrow-up', color: '#EF4444' };
-    }
+  const getTransactionType = () => {
+    return { text: 'Withdrawal', icon: 'arrow-up', color: '#EF4444' };
   };
 
-  // Calculate total deposits
-  const totalDeposits = deposits.reduce((sum, d) => sum + (d.amount || 0), 0);
+  // Calculate total withdrawals
+  const totalWithdrawals = withdrawals.reduce((sum, w) => sum + (w.amount || 0), 0);
 
-  // Render deposit card (exactly same as home screen order card)
-  const renderDepositCard = ({ item: deposit }) => {
-    const type = getTransactionType(deposit);
-    
- 
+  // Render withdrawal card
+  const renderWithdrawalCard = ({ item: withdrawal }) => {
+    const type = getTransactionType();
+
     return (
-      <TouchableOpacity 
-        key={deposit.id} 
+      <TouchableOpacity
+        key={withdrawal.id}
         style={styles.orderCard}
-      onPress={() => navigation.navigate("OrderDetails", { order: deposit })}
+        onPress={() => navigation.navigate("OrderDetails", { order: withdrawal })}
       >
         <View style={styles.orderHeader}>
           <View style={styles.orderTypeContainer}>
             <View style={[styles.orderIcon, { backgroundColor: type.color + '20' }]}>
-              <Ionicons 
-                name={type.icon === 'arrow-down' ? 'arrow-down-outline' : 'arrow-up-outline'} 
-                size={20} 
-                color={type.color} 
+              <Ionicons
+                name="arrow-up-outline"
+                size={20}
+                color={type.color}
               />
             </View>
             <View>
               <Text style={styles.orderType}>{type.text}</Text>
-              <Text style={styles.orderNumber}>{deposit.orderNumber}</Text>
+              <Text style={styles.orderNumber}>{withdrawal.orderNumber}</Text>
             </View>
           </View>
-          <View style={[styles.statusBadge, { backgroundColor: getStatusColor(deposit.status) }]}>
-            <FontAwesome5 name={getStatusIcon(deposit.status)} size={10} color="#fff" />
-            <Text style={styles.statusText}>{getStatusText(deposit.status)}</Text>
+          <View style={[styles.statusBadge, { backgroundColor: getStatusColor(withdrawal.status) }]}>
+            <FontAwesome5 name={getStatusIcon(withdrawal.status)} size={10} color="#fff" />
+            <Text style={styles.statusText}>{getStatusText(withdrawal.status)}</Text>
           </View>
         </View>
 
@@ -168,26 +160,29 @@ const Withdrawal = ({ navigation }) => {
           <View style={styles.detailRow}>
             <Text style={styles.detailLabel}>Amount:</Text>
             <Text style={[styles.detailValue, { fontWeight: 'bold', color: type.color }]}>
-              {formatAmount(deposit.amount)}
+              {formatAmount(withdrawal.amount)}
             </Text>
           </View>
           <View style={styles.detailRow}>
             <Text style={styles.detailLabel}>Method:</Text>
-            <Text style={styles.detailValue}>{deposit.paymentMethod} {deposit?.bankName && (
-  <Text>( {deposit?.bankName} )</Text>
-)} </Text>
+            <Text style={styles.detailValue}>
+              {withdrawal.paymentMethod}
+              {withdrawal?.bankName && (
+                <Text> ( {withdrawal?.bankName} )</Text>
+              )}
+            </Text>
           </View>
           <View style={styles.detailRow}>
             <Text style={styles.detailLabel}>Date:</Text>
-            <Text style={styles.detailValue}>{formatDate(deposit.createdAt)}</Text>
+            <Text style={styles.detailValue}>{formatDate(withdrawal.createdAt)}</Text>
           </View>
-          {deposit.accountNumber && (
+          {withdrawal.accountNumber && (
             <View style={styles.detailRow}>
               <Text style={styles.detailLabel}>Account:</Text>
               <Text style={styles.detailValue}>
-                {deposit.accountNumber.length > 15 
-                  ? `***${deposit.accountNumber.slice(-4)}` 
-                  : deposit.accountNumber}
+                {withdrawal.accountNumber.length > 15
+                  ? `***${withdrawal.accountNumber.slice(-4)}`
+                  : withdrawal.accountNumber}
               </Text>
             </View>
           )}
@@ -203,19 +198,19 @@ const Withdrawal = ({ navigation }) => {
         <View style={styles.statCard}>
           <Text style={styles.statLabel}>Total Withdraw</Text>
           <Text style={styles.statValue}>
-            {formatAmount(totalDeposits)}
+            {formatAmount(totalWithdrawals)}
           </Text>
         </View>
         <View style={styles.statCard}>
           <Text style={styles.statLabel}>Total Transactions</Text>
-          <Text style={styles.statValue}>{deposits.length}</Text>
+          <Text style={styles.statValue}>{withdrawals.length}</Text>
         </View>
       </View>
-      
+
       <View style={styles.sectionHeader}>
         <Text style={styles.sectionTitle}>Withdrawal History</Text>
-        {deposits.length > 0 && (
-          <Text style={styles.countText}>{deposits.length} records</Text>
+        {withdrawals.length > 0 && (
+          <Text style={styles.countText}>{withdrawals.length} records</Text>
         )}
       </View>
     </>
@@ -229,7 +224,7 @@ const Withdrawal = ({ navigation }) => {
       <Text style={styles.emptySubText}>
         Your Withdrawal transactions will appear here
       </Text>
-      <TouchableOpacity 
+      <TouchableOpacity
         style={styles.depositButton}
         onPress={() => navigation.navigate("PaymentWithdrawal")}
       >
@@ -243,7 +238,7 @@ const Withdrawal = ({ navigation }) => {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-       
+
         <Text style={styles.headerTitle}>Withdrawal History</Text>
         <View style={{ width: 40 }} />
       </View>
@@ -255,14 +250,21 @@ const Withdrawal = ({ navigation }) => {
         </View>
       ) : (
         <FlatList
-          data={deposits}
+          data={withdrawals}
           keyExtractor={(item) => item.id}
-          renderItem={renderDepositCard}
-          ListHeaderComponent={deposits.length > 0 ? renderHeader : null}
+          renderItem={renderWithdrawalCard}
+          ListHeaderComponent={withdrawals.length > 0 ? renderHeader : null}
           ListEmptyComponent={renderEmptyState}
-          contentContainerStyle={deposits.length > 0 ? styles.listContent : styles.emptyListContent}
+          contentContainerStyle={withdrawals.length > 0 ? styles.listContent : styles.emptyListContent}
           showsVerticalScrollIndicator={false}
-         
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={["#10B981"]}
+              tintColor="#10B981"
+            />
+          }
         />
       )}
     </View>

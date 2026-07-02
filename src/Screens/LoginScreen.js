@@ -149,7 +149,7 @@ export default function LoginScreen({ navigation }) {
   }}
   style={{
     position: "absolute",
-    bottom: 40,
+    bottom: 50,
     right: 20,
     justifyContent: "center",
     alignItems: "center",

@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import { Ionicons, FontAwesome5 } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
-import { getUserOrders, listenToUserOrders } from '../services/orderService';
+import { getUserDeposits, listenToUserDeposits } from '../services/Depositservice';
 
 const { width } = Dimensions.get("window");
 
@@ -26,12 +26,11 @@ const HistoryDeposit = ({ navigation }) => {
   useEffect(() => {
     if (!user) return;
 
-    // Set up real-time listener for orders
-    const unsubscribe = listenToUserOrders(user.uid, (result) => {
+    // Set up real-time listener for deposits only — no more downloading
+    // withdrawals just to filter them out client-side.
+    const unsubscribe = listenToUserDeposits(user.uid, (result) => {
       if (result.success) {
-        // Filter only deposits (isDeposit === true)
-        const depositOrders = result.orders.filter(order => order.isDeposit === true);
-        setDeposits(depositOrders);
+        setDeposits(result.orders);
       }
       setLoading(false);
       setRefreshing(false);
@@ -39,9 +38,6 @@ const HistoryDeposit = ({ navigation }) => {
 
     return () => unsubscribe();
   }, [user]);
-
-
- 
 
   const onRefresh = () => {
     setRefreshing(true);
@@ -118,6 +114,8 @@ const HistoryDeposit = ({ navigation }) => {
  
     return `${formattedDate} at ${timeString}`;
   }
+
+  return `${formattedDate} at ${timeString}`;
 };
 
 
@@ -125,12 +123,8 @@ const HistoryDeposit = ({ navigation }) => {
     return `PKR ${amount?.toLocaleString() || 0}`;
   };
 
-  const getTransactionType = (order) => {
-    if (order.isDeposit) {
-      return { text: 'Deposit', icon: 'arrow-down', color: '#10B981' };
-    } else {
-      return { text: 'Withdrawal', icon: 'arrow-up', color: '#EF4444' };
-    }
+  const getTransactionType = () => {
+    return { text: 'Deposit', icon: 'arrow-down', color: '#10B981' };
   };
 
   // Calculate total deposits
@@ -138,8 +132,7 @@ const HistoryDeposit = ({ navigation }) => {
  
   // Render deposit card (exactly same as home screen order card)
   const renderDepositCard = ({ item: deposit }) => {
-    const type = getTransactionType(deposit);
-    console.log(deposit)
+    const type = getTransactionType();
   
     return (
       <TouchableOpacity 
@@ -151,7 +144,7 @@ const HistoryDeposit = ({ navigation }) => {
           <View style={styles.orderTypeContainer}>
             <View style={[styles.orderIcon, { backgroundColor: type.color + '20' }]}>
               <Ionicons 
-                name={type.icon === 'arrow-down' ? 'arrow-down-outline' : 'arrow-up-outline'} 
+                name="arrow-down-outline"
                 size={20} 
                 color={type.color} 
               />
@@ -173,7 +166,7 @@ const HistoryDeposit = ({ navigation }) => {
             <Text style={[styles.detailValue, { fontWeight: 'bold', color: type.color }]}>
               {formatAmount(deposit.amount)}
               {deposit?.bankName && (
-                <Text>( {deposit?.bank} )</Text>
+                <Text>( {deposit?.bankName} )</Text>
               )} 
             </Text>
           </View>
@@ -267,7 +260,14 @@ const HistoryDeposit = ({ navigation }) => {
           ListEmptyComponent={renderEmptyState}
           contentContainerStyle={deposits.length > 0 ? styles.listContent : styles.emptyListContent}
           showsVerticalScrollIndicator={false}
-         
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={["#10B981"]}
+              tintColor="#10B981"
+            />
+          }
         />
       )}
     </View>

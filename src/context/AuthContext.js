@@ -8,7 +8,7 @@ import {
   onAuthStateChanged
 } from 'firebase/auth';
 import { auth, database } from '../../firebase';
-import { ref, set, get, update, onValue } from 'firebase/database';
+import { ref, set, update, onValue } from 'firebase/database';
 import { getUserProfile } from '../services/userService';
 
 const AuthContext = createContext();
@@ -26,137 +26,132 @@ export const AuthProvider = ({ children }) => {
   const [userProfile, setUserProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [profileNotFound, setProfileNotFound] = useState(false); // ✅ new
 
   useEffect(() => {
-  let unsubscribeDb = null;
+    let unsubscribeDb = null;
 
-  const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
-    setUser(user);
+    const unsubscribeAuth = onAuthStateChanged(auth, (firebaseUser) => {
+      setUser(firebaseUser);
 
-    if (user) {
-      const userRef = ref(database, `users/${user.uid}`);
+      if (firebaseUser) {
+        setProfileNotFound(false);
+        const userRef = ref(database, `users/${firebaseUser.uid}`);
 
-      unsubscribeDb = onValue(userRef, (snapshot) => {
-        if (snapshot.exists()) {
-          setUserProfile(snapshot.val());
-        }
+        unsubscribeDb = onValue(userRef, (snapshot) => {
+          if (snapshot.exists()) {
+            // ✅ Profile found
+            setUserProfile(snapshot.val());
+            setProfileNotFound(false);
+          } else {
+            // ✅ User in Auth but NOT in database (deleted account)
+            setUserProfile(null);
+            setProfileNotFound(true);
+          }
+          setLoading(false); // ✅ always stop loading
+        }, (error) => {
+          // ✅ Database read error — stop loading too
+          console.error('Database read error:', error);
+          setUserProfile(null);
+          setProfileNotFound(true);
+          setLoading(false);
+        });
+
+      } else {
+        // No user logged in
+        if (unsubscribeDb) unsubscribeDb();
+        setUserProfile(null);
+        setProfileNotFound(false);
         setLoading(false);
-      });
-    } else {
-      setUserProfile(null);
-      setLoading(false);
-    }
-  });
+      }
+    });
 
-  return () => {
-    if (unsubscribeDb) unsubscribeDb();
-    unsubscribeAuth();
-  };
-}, []);
- 
+    return () => {
+      if (unsubscribeDb) unsubscribeDb();
+      unsubscribeAuth();
+    };
+  }, []);
 
-  // Register function - creates account and Realtime Database profile
-  const register = async (name, email, password,phoneNumber) => {
+  // Register
+  const register = async (name, email, password, phoneNumber) => {
     try {
       setError(null);
-      if (!auth) {
-        throw new Error('Auth not initialized');
-      }
-      
+      if (!auth) throw new Error('Auth not initialized');
+
       console.log('Creating user with email:', email);
-      
-      // Create user in Firebase Auth
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password,);
-      
+
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+
       if (userCredential.user) {
         console.log('User created:', userCredential.user.uid);
-        
-        // Update profile with name in Auth
-        await updateProfile(userCredential.user, {
-          displayName: name
-        });
-        
-        // Create Realtime Database user profile with default values
+
+        await updateProfile(userCredential.user, { displayName: name });
+
         const userRef = ref(database, `users/${userCredential.user.uid}`);
-        const userProfileData = {
-          email: email,
+        await set(userRef, {
+          email,
           displayName: name,
-          bpUsername: '', // Empty string initially
-          bpPassword: '', // Empty string initially
-          isAccepted: false, // Boolean false initially
-          isAdmin: false, // Boolean false initially - only you can manually set this in DB
+          bpUsername: '',
+          bpPassword: '',
+          isAccepted: false,
+          isAdmin: false,
           phoneNumber: phoneNumber || '',
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString()
-        };
-        
-        await set(userRef, userProfileData);
+        });
+
         console.log('Realtime Database profile created');
-        
-        // Sign out to prevent auto-login
+
         await signOut(auth);
         setUser(null);
         setUserProfile(null);
         console.log('Signed out after registration');
       }
-      
+
       return { success: true };
     } catch (err) {
       console.error('Registration error:', err);
-      console.error('Error code:', err.code);
-      console.error('Error message:', err.message);
       setError(err.message);
       return { success: false, error: err.message };
     }
   };
 
-  // Login function - manually logs in the user
+  // Login
   const login = async (email, password) => {
     try {
       setError(null);
-      if (!auth) {
-        throw new Error('Auth not initialized');
-      }
-      
+      if (!auth) throw new Error('Auth not initialized');
+
       console.log('Logging in with email:', email);
-      
+
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       console.log('Login successful:', userCredential.user.uid);
-      
+
       return { success: true, user: userCredential.user };
     } catch (err) {
       console.error('Login error:', err);
-      console.error('Error code:', err.code);
-      console.error('Error message:', err.message);
-      
-      // Provide user-friendly error messages
+
       let errorMessage = err.message;
-      if (err.code === 'auth/user-not-found') {
-        errorMessage = 'No account found with this email';
-      } else if (err.code === 'auth/wrong-password') {
-        errorMessage = 'Incorrect password';
-      } else if (err.code === 'auth/invalid-email') {
-        errorMessage = 'Invalid email format';
-      } else if (err.code === 'auth/user-disabled') {
-        errorMessage = 'This account has been disabled';
-      }
-      
+      if (err.code === 'auth/user-not-found') errorMessage = 'No account found with this email';
+      else if (err.code === 'auth/wrong-password') errorMessage = 'Incorrect password';
+      else if (err.code === 'auth/invalid-email') errorMessage = 'Invalid email format';
+      else if (err.code === 'auth/user-disabled') errorMessage = 'This account has been disabled';
+
       setError(errorMessage);
       return { success: false, error: errorMessage };
     }
   };
 
-  // Logout function
+  // Logout
   const logout = async () => {
     try {
       setError(null);
-      if (!auth) {
-        throw new Error('Auth not initialized');
-      }
-      
+      if (!auth) throw new Error('Auth not initialized');
+
       await signOut(auth);
       setUser(null);
       setUserProfile(null);
+      setProfileNotFound(false);
       console.log('Logout successful');
       return { success: true };
     } catch (err) {
@@ -166,7 +161,7 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Optional: Update user profile function
+  // Update user profile
   const updateUserProfile = async (userId, updateData) => {
     try {
       const userRef = ref(database, `users/${userId}`);
@@ -175,7 +170,6 @@ export const AuthProvider = ({ children }) => {
         updatedAt: new Date().toISOString()
       };
       await update(userRef, updates);
-      // Update local state
       if (user && user.uid === userId) {
         setUserProfile(prev => ({ ...prev, ...updates }));
       }
@@ -186,13 +180,13 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-// Add this refresh function
+  // Refresh user profile
   const refreshUserProfile = async () => {
     if (!user) {
       console.log('No user logged in');
       return { success: false, error: 'No user logged in' };
     }
-    
+
     const result = await getUserProfile(user.uid);
     if (result.success) {
       setUserProfile(result.data);
@@ -201,25 +195,23 @@ export const AuthProvider = ({ children }) => {
       console.error('Failed to refresh profile:', result.error);
       return { success: false, error: result.error };
     }
-  }
-  
-
-  const value = {
-    user,
-    userProfile,
-    loading,
-    error,
-    register,
-    login,
-    logout,
-    updateUserProfile, // Add this if needed
-    refreshUserProfile,
-    isAuthenticated: !!user,
-    isAdmin: userProfile?.isAdmin || false // Helper to check if user is admin
   };
 
   return (
-    <AuthContext.Provider value={value}>
+    <AuthContext.Provider value={{
+      user,
+      userProfile,
+      loading,
+      error,
+      profileNotFound, // ✅ exposed so StackNavigation can use it
+      register,
+      login,
+      logout,
+      updateUserProfile,
+      refreshUserProfile,
+      isAuthenticated: !!user,
+      isAdmin: userProfile?.isAdmin || false
+    }}>
       {children}
     </AuthContext.Provider>
   );

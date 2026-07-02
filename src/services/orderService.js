@@ -1,6 +1,16 @@
 // src/services/orderService.js
-
-import { ref, push, set, get, update, query, orderByChild, equalTo, onValue } from 'firebase/database';
+import {
+  ref,
+  push,
+  set,
+  get,
+  update,
+  query,
+  orderByChild,
+  equalTo,
+  onValue,
+  remove
+} from 'firebase/database';
 import { database } from '../../firebase';
 
 // Create a new order

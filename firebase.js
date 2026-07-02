@@ -5,7 +5,7 @@ import { getDatabase } from 'firebase/database';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBtdEBC5BAwPoYk_DmDnrXn2Kxs-90qTdk",
+   apiKey: "AIzaSyBtdEBC5BAwPoYk_DmDnrXn2Kxs-90qTdk",
   authDomain: "betpro-2f60a.firebaseapp.com",
   databaseURL: "https://betpro-2f60a-default-rtdb.firebaseio.com",
   projectId: "betpro-2f60a",

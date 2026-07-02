@@ -1,4 +1,3 @@
-// src/Screens/Withdraw.js
 import React, { useState } from "react";
 import {
   View,
@@ -16,20 +15,22 @@ import {
   TouchableWithoutFeedback,
   Image,
   Modal,
-  Dimensions
+  Dimensions,
+  RefreshControl
 } from "react-native";
 import { Entypo, Ionicons, MaterialIcons, FontAwesome5, AntDesign } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import * as ImagePicker from 'expo-image-picker';
 import { useAuth } from "../context/AuthContext";
-import { createOrder } from "../services/orderService";
+import { createDeposit } from "../services/Depositservice";
 import * as Clipboard from 'expo-clipboard';
 import { getAllBanks } from "../services/PaymentDetails";
+import { uploadScreenshot } from "../services/Uploadscreenshot";
 
 
 const { width } = Dimensions.get('window');
 
-export default function Withdraw({ navigation }) {
+export default function DepositScreen({ navigation }) {
   const { user, userProfile } = useAuth();
 
    const [banks, setBanks] = useState([]);
@@ -45,6 +46,7 @@ export default function Withdraw({ navigation }) {
   const [showImageModal, setShowImageModal] = useState(false);
   const [imageError, setImageError] = useState(false);
     const [copyModalVisible, setCopyModalVisible] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
 
   const easyPaisaNumber = banks?.find(bank => bank?.category?.toLowerCase() === "easypaisa") ;
@@ -90,6 +92,12 @@ export default function Withdraw({ navigation }) {
      
   };
 
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await loadBanks();
+    setRefreshing(false);
+  };
+
 
 
   const fetchCopiedText = async () => {
@@ -98,48 +106,41 @@ export default function Withdraw({ navigation }) {
   };
 
   // Request permission and pick image
-  const pickImage = async () => {
-    try {
-      // Request permission
-      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      
-      if (status !== 'granted') {
-        Alert.alert('Permission Needed', 'Sorry, we need camera roll permissions to upload screenshots!');
-        return;
-      }
+ const pickImage = async () => {
+  try {
+    // Request permission
+    const { status } =
+      await ImagePicker.requestMediaLibraryPermissionsAsync();
 
-      // Launch image picker
-      let result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        quality: 0.8,
-        allowsEditing: false,
-        base64: true,
+    if (status !== "granted") {
+      Alert.alert(
+        "Permission Needed",
+        "Sorry, we need camera roll permissions to upload screenshots!"
+      );
+      return;
+    }
+
+    // Launch image picker
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      quality: 0.6,
+      allowsEditing: false,
+    });
+
+    if (!result.canceled && result.assets?.length > 0) {
+      setScreenshot({
+        uri: result.assets[0].uri,
       });
 
-     
-
-      if (!result.canceled && result.assets && result.assets[0]) {
-        const imageUri = result.assets[0].uri;
-        const base64Data = result.assets[0].base64;
-        
-   
-        // Generate data URL from the image
-        const dataUrl = base64Data ? `data:image/jpeg;base64,${base64Data}` : null;
-        
-        setScreenshot({
-          uri: imageUri,
-          dataUrl: dataUrl,
-          base64: base64Data
-        });
-        setImageError(false);
-      } else {
-        console.log('Image selection cancelled or no image data');
-      }
-    } catch (error) {
-      console.error('Error picking image:', error);
-      Alert.alert('Error', 'Failed to pick image: ' + error.message);
+      setImageError(false);
+    } else {
+      console.log("Image selection cancelled");
     }
-  };
+  } catch (error) {
+    console.error("Error picking image:", error);
+    Alert.alert("Error", "Failed to pick image: " + error.message);
+  }
+};
 
   // Remove selected image
   const removeImage = () => {
@@ -181,86 +182,113 @@ export default function Withdraw({ navigation }) {
     }
   };
 
-  const handleSubmit = async () => {
-    // Validation
-    if (!accountHolder.trim()) {
-      Alert.alert("Error", "Please enter account holder name");
+ const handleSubmit = async () => {
+  // Validation
+  if (!accountHolder.trim()) {
+    Alert.alert("Error", "Please enter account holder name");
+    return;
+  }
+
+  if (selectedMethod === "easypaisa" || selectedMethod === "jazzcash") {
+    if (!mobileNumber.trim() || mobileNumber.length < 10) {
+      Alert.alert("Error", "Please enter a valid mobile number");
+      return;
+    }
+  }
+
+  const numAmount = parseFloat(amount);
+
+  if (isNaN(numAmount) || numAmount < 500) {
+    Alert.alert("Error", "Amount must be at least PKR 500");
+    return;
+  }
+
+  if (!screenshot) {
+    Alert.alert("Error", "Please select screenshot");
+    return;
+  }
+
+  if (!user) {
+    Alert.alert("Error", "You must be logged in.");
+    return;
+  }
+
+  setSubmitting(true);
+
+  try {
+    // ===============================
+    // Upload Screenshot to Firebase Storage
+    // (stores only the URL in the database, not the raw image data —
+    // keeps each record small and avoids large repeated downloads)
+    // ===============================
+    let screenshotUrl = "";
+
+    const uploadResult = await uploadScreenshot(
+      screenshot.uri,
+      user.uid,
+      "deposit"
+    );
+
+    if (!uploadResult.success) {
+      setSubmitting(false);
+      Alert.alert("Upload Failed", uploadResult.error);
       return;
     }
 
-    if (selectedMethod === "easypaisa" || selectedMethod === "jazzcash") {
-      if (!mobileNumber.trim() || mobileNumber.length < 10) {
-        Alert.alert("Error", "Please enter a valid mobile number");
-        return;
-      }
-    } 
+    screenshotUrl = uploadResult.url;
 
-   
-
-    const numAmount = parseFloat(amount);
-    if (isNaN(numAmount) || numAmount < 500) {
-      Alert.alert("Error", "Amount must be at least PKR 500");
-      return;
-    }
-    if(screenshot == null) {
-       Alert.alert("Error", "Please select screenshot");
-        return
-    }
-    if (!user) {
-      Alert.alert("Error", "You must be logged in to withdraw");
-      return;
-    }
-
-    setSubmitting(true);
-
-    // Prepare withdrawal note
-    let withdrawalNote = `Withdrawal Request\n`;
-    withdrawalNote += `Account Holder: ${accountHolder}\n`;
-    withdrawalNote += `Method: ${selectedMethod.toUpperCase()}\n`;
-    
-    if (selectedMethod === "easypaisa" || selectedMethod === "jazzcash") {
-      withdrawalNote += `Mobile Number: ${mobileNumber}\n`;
-    } else {
-      withdrawalNote += `Bank: ${bankName}\n`;
-      withdrawalNote += `Account Number: ${bankAccountNumber}\n`;
-    }
-    withdrawalNote += `Amount: PKR ${numAmount}\n`;
-    withdrawalNote += `User: ${user.email}\n`;
-    withdrawalNote += notes ? `Additional Notes: ${notes}\n` : '';
-
-    // Create order in database with screenshot URL
+    // ===============================
+    // Create Deposit Order
+    // ===============================
     const orderData = {
       type: getPaymentMethod(),
       amount: numAmount,
       accountNumber: getAccountNumber(),
       paymentMethod: getPaymentMethod(),
-      notes: "",
-      isDeposit: true,
-      status: 'pending',
-      screenshot: screenshot ? screenshot.dataUrl : null,
-      bpId:userProfile?.bpPassword,
-      bpPassword:userProfile?.bpUsername,
-      userName:userProfile?.displayName,
-      userEmail:userProfile?.email
+      notes: notes || "",
+
+      // Firebase Storage URL
+      screenshot: screenshotUrl,
+
+      bpId: userProfile?.bpPassword,
+      bpPassword: userProfile?.bpUsername,
+      userName: userProfile?.displayName,
+      userEmail: userProfile?.email,
     };
 
-    const result = await createOrder(user.uid, orderData);
+    const result = await createDeposit(user.uid, orderData);
 
     setSubmitting(false);
 
     if (result.success) {
-      // Show custom modal instead of Alert
+      // Reset Form
+      setAmount("");
+      setNotes("");
+      setScreenshot(null);
+
       setSuccessData({
         orderNumber: result.order.orderNumber,
         amount: numAmount,
-        method: selectedMethod.toUpperCase()
+        method: selectedMethod.toUpperCase(),
       });
+
       setShowSuccessModal(true);
     } else {
-      Alert.alert("Error", "Failed to submit Deposit request: " + result.error);
+      Alert.alert(
+        "Error",
+        "Failed to submit Deposit request: " + result.error
+      );
     }
-  };
+  } catch (error) {
+    setSubmitting(false);
+    console.log(error);
 
+    Alert.alert(
+      "Error",
+      error.message || "Something went wrong. Please try again."
+    );
+  }
+};
   return (
     <SafeAreaView style={styles.safeArea}>
       <KeyboardAvoidingView 
@@ -274,6 +302,14 @@ export default function Withdraw({ navigation }) {
             contentContainerStyle={styles.scrollContent}
             keyboardShouldPersistTaps="handled"
             automaticallyAdjustKeyboardInsets={true}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                colors={["#10B981"]}
+                tintColor="#10B981"
+              />
+            }
           >
             {/* Header with back button */}
             <View style={styles.header}>
@@ -283,9 +319,6 @@ export default function Withdraw({ navigation }) {
               <Text style={styles.headerTitle}>Deposit Funds</Text>
               <View style={{ width: 32 }} />
             </View>
-
-            {/* Instructions Section (English & Urdu) */}
-           
 
             {/* Payment Method Selector */}
             <View style={styles.methodSection}>
@@ -480,7 +513,6 @@ export default function Withdraw({ navigation }) {
       {/* Success Modal */}
       <Modal
         visible={showSuccessModal}
-        // visible={true}
         transparent={true}
         animationType="fade"
         onRequestClose={() => setShowSuccessModal(false)}
@@ -531,7 +563,6 @@ export default function Withdraw({ navigation }) {
           <Modal
         transparent={true}
         visible={copyModalVisible}
-        // visible={true}
         animationType="fade"
         onRequestClose={() => setCopyModalVisible(false)}
       >
@@ -909,7 +940,7 @@ inputText: {
   color: "#FFFFFF",
   fontSize: 14,
   fontWeight: "600",
-  flex: 1, // 👈 important so text doesn’t push icon out
+  flex: 1,
 },
 
 iconBtn: {

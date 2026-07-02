@@ -1,4 +1,3 @@
-// src/Screens/Withdraw.js
 import React, { useEffect, useState } from "react";
 import {
   View,
@@ -22,7 +21,8 @@ import { Entypo, Ionicons, MaterialIcons, FontAwesome5 } from "@expo/vector-icon
 import { LinearGradient } from "expo-linear-gradient";
 import * as ImagePicker from 'expo-image-picker';
 import { useAuth } from "../context/AuthContext";
-import { createOrder, listenToUserOrders } from "../services/orderService";
+import { createWithdrawal } from "../services/Withdrawalservice";
+import { uploadScreenshot } from "../services/Uploadscreenshot";
 import { listenToWithdrawalTime } from "../services/withdrawalTime";
 
 const { width } = Dimensions.get('window');
@@ -43,10 +43,6 @@ export default function PaymentWithdrawal({ navigation }) {
   const [imageError, setImageError] = useState(false);
   const [withdrawaltime, setWithdrawalTime] = useState([]);
 
-    const [deposits, setDeposits] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [refreshing, setRefreshing] = useState(false);
-  
   // State for success modal
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [successData, setSuccessData] = useState({
@@ -69,125 +65,78 @@ export default function PaymentWithdrawal({ navigation }) {
       }
     });
 
-    return () => unsubscribe(); // cleanup on unmount
+    return () => unsubscribe();
   }, []);
 
   const timeWithdrawal = withdrawaltime?.find(item => item?.url) || null;
 
+  // Helper function to check if withdrawal is allowed based on activeTime flag and time window
+  const isWithdrawalAllowed = () => {
+    if (!timeWithdrawal) return false;
 
+    // If activeTime is false, skip time check and always allow
+    if (!timeWithdrawal.activeTime) return true;
 
-  // Helper function to check if withdrawal is allowed
- const isWithdrawalAllowed = () => {
-  if (!timeWithdrawal || !timeWithdrawal.fromtime || !timeWithdrawal.toTime) {
-    return false;
-  }
+    // activeTime is true — check the time window
+    if (!timeWithdrawal.fromtime || !timeWithdrawal.toTime) return false;
 
-  const now = new Date();
-  const currentHours = now.getHours();
-  const currentMinutes = now.getMinutes();
-  const currentTimeInMinutes = currentHours * 60 + currentMinutes;
+    const now = new Date();
+    const currentHours = now.getHours();
+    const currentMinutes = now.getMinutes();
+    const currentTimeInMinutes = currentHours * 60 + currentMinutes;
 
-  // Parse fromtime
-  const fromTimeParts = timeWithdrawal.fromtime.match(/(\d+):(\d+)\s*(AM|PM)/i);
-  if (!fromTimeParts) return false;
-  let fromHours = parseInt(fromTimeParts[1]);
-  const fromMinutes = parseInt(fromTimeParts[2]);
-  const fromPeriod = fromTimeParts[3].toUpperCase();
-  if (fromPeriod === 'PM' && fromHours !== 12) fromHours += 12;
-  if (fromPeriod === 'AM' && fromHours === 12) fromHours = 0;
-  const fromTimeInMinutes = fromHours * 60 + fromMinutes;
+    // Parse fromtime
+    const fromTimeParts = timeWithdrawal.fromtime.match(/(\d+):(\d+)\s*(AM|PM)/i);
+    if (!fromTimeParts) return false;
+    let fromHours = parseInt(fromTimeParts[1]);
+    const fromMinutes = parseInt(fromTimeParts[2]);
+    const fromPeriod = fromTimeParts[3].toUpperCase();
+    if (fromPeriod === 'PM' && fromHours !== 12) fromHours += 12;
+    if (fromPeriod === 'AM' && fromHours === 12) fromHours = 0;
+    const fromTimeInMinutes = fromHours * 60 + fromMinutes;
 
-  // Parse toTime
-  const toTimeParts = timeWithdrawal.toTime.match(/(\d+):(\d+)\s*(AM|PM)/i);
-  if (!toTimeParts) return false;
-  let toHours = parseInt(toTimeParts[1]);
-  const toMinutes = parseInt(toTimeParts[2]);
-  const toPeriod = toTimeParts[3].toUpperCase();
-  if (toPeriod === 'PM' && toHours !== 12) toHours += 12;
-  if (toPeriod === 'AM' && toHours === 12) toHours = 0;
-  const toTimeInMinutes = toHours * 60 + toMinutes;
+    // Parse toTime
+    const toTimeParts = timeWithdrawal.toTime.match(/(\d+):(\d+)\s*(AM|PM)/i);
+    if (!toTimeParts) return false;
+    let toHours = parseInt(toTimeParts[1]);
+    const toMinutes = parseInt(toTimeParts[2]);
+    const toPeriod = toTimeParts[3].toUpperCase();
+    if (toPeriod === 'PM' && toHours !== 12) toHours += 12;
+    if (toPeriod === 'AM' && toHours === 12) toHours = 0;
+    const toTimeInMinutes = toHours * 60 + toMinutes;
 
-  // Time range check (handles overnight windows)
-  if (fromTimeInMinutes <= toTimeInMinutes) {
-    return currentTimeInMinutes >= fromTimeInMinutes && currentTimeInMinutes <= toTimeInMinutes;
-  } else {
-    return currentTimeInMinutes >= fromTimeInMinutes || currentTimeInMinutes <= toTimeInMinutes;
-  }
-};
+    // Time range check (handles overnight windows)
+    if (fromTimeInMinutes <= toTimeInMinutes) {
+      return currentTimeInMinutes >= fromTimeInMinutes && currentTimeInMinutes <= toTimeInMinutes;
+    } else {
+      return currentTimeInMinutes >= fromTimeInMinutes || currentTimeInMinutes <= toTimeInMinutes;
+    }
+  };
 
-   useEffect(() => {
-      if (!user) return;
-  
-      // Set up real-time listener for orders
-      const unsubscribe = listenToUserOrders(user.uid, (result) => {
-        if (result.success) {
-          // Filter only deposits (isDeposit === true)
-          const depositOrders = result.orders.filter(order => order.isDeposit === false);
-          setDeposits(depositOrders);
-        }
-        setLoading(false);
-        setRefreshing(false);
-      });
-  
-      return () => unsubscribe();
-    }, [user]);
-
-
-     console.log("neww",deposits)
-const item = deposits.find(item => item);
-console.log(item)
-
-const hasSubmittedInLast24Hours = item => {
-  if (!item?.updatedAt) return false;
-
-  const updatedDate = new Date(item.updatedAt);
-  const now = new Date();
-
-  const diffInHours =
-    (now.getTime() - updatedDate.getTime()) / (1000 * 60 * 60);
-
-  const isSameDay =
-    updatedDate.getDate() === now.getDate() &&
-    updatedDate.getMonth() === now.getMonth() &&
-    updatedDate.getFullYear() === now.getFullYear();
-
-  return diffInHours < 24 && isSameDay;
-};
-
-  // Request permission and pick image
+  // Pick image for screenshot
+  // NOTE: base64: true REMOVED — this was the bug causing huge database
+  // downloads. We now only keep the local file `uri` and upload it to
+  // Firebase Storage at submit time, storing just the resulting URL.
   const pickImage = async () => {
     try {
-      // Request permission
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      
+
       if (status !== 'granted') {
         Alert.alert('Permission Needed', 'Sorry, we need camera roll permissions to upload screenshots!');
         return;
       }
 
-      // Launch image picker
       let result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        quality: 0.8,
+        quality: 0.6,
         allowsEditing: false,
-        base64: true,
       });
 
       if (!result.canceled && result.assets && result.assets[0]) {
-        const imageUri = result.assets[0].uri;
-        const base64Data = result.assets[0].base64;
-        
-        // Generate data URL from the image
-        const dataUrl = base64Data ? `data:image/jpeg;base64,${base64Data}` : null;
-        
         setScreenshot({
-          uri: imageUri,
-          dataUrl: dataUrl,
-          base64: base64Data
+          uri: result.assets[0].uri,
         });
         setImageError(false);
-      } else {
-        console.log('Image selection cancelled or no image data');
       }
     } catch (error) {
       console.error('Error picking image:', error);
@@ -195,56 +144,37 @@ const hasSubmittedInLast24Hours = item => {
     }
   };
 
-  // Remove selected image
   const removeImage = () => {
     setScreenshot(null);
     setImageError(false);
   };
 
-  // Handle image loading error
   const handleImageError = (error) => {
     console.error('Image loading error:', error);
     setImageError(true);
   };
 
-  // Map method names to match order service
   const getPaymentMethod = () => {
-    switch(selectedMethod) {
-      case "easypaisa":
-        return "EASYPAISA";
-      case "jazzcash":
-        return "JAZZCASH";
-      case "bank":
-        return "BANK";
-      default:
-        return "BANK";
+    switch (selectedMethod) {
+      case "easypaisa": return "EASYPAISA";
+      case "jazzcash": return "JAZZCASH";
+      case "bank": return "BANK";
+      default: return "BANK";
     }
   };
 
-  // Get account number based on method
   const getAccountNumber = () => {
-    switch(selectedMethod) {
-      case "easypaisa":
-        return mobileNumber;
-      case "jazzcash":
-        return mobileNumber;
-      case "bank":
-        return bankAccountNumber;
-      default:
-        return "";
+    switch (selectedMethod) {
+      case "easypaisa": return mobileNumber;
+      case "jazzcash": return mobileNumber;
+      case "bank": return bankAccountNumber;
+      default: return "";
     }
   };
 
   const handleSubmit = async () => {
-    // Check if withdrawal is allowed based on time
-      if (hasSubmittedInLast24Hours(item)) {
-    Alert.alert(
-      "You have already made the withdrawal today . Now you can place Another Withdrawal request tomorrow During Withdrawal timing"
-    );
-    return;
-  }
+    // 1. Check withdrawal time window
     if (!isWithdrawalAllowed()) {
-      // Show time restriction modal instead of alert
       setTimeRestrictionData({
         fromTime: timeWithdrawal?.fromtime || 'N/A',
         toTime: timeWithdrawal?.toTime || 'N/A'
@@ -253,19 +183,20 @@ const hasSubmittedInLast24Hours = item => {
       return;
     }
 
+    // 2. Validate form fields
     if (selectedMethod === "easypaisa" || selectedMethod === "jazzcash") {
       if (!mobileNumber.trim() || mobileNumber.length < 10) {
-        Alert.alert("Error", "Pleas inter your account info");
+        Alert.alert("Error", "Please enter your account info");
         return;
       }
-    } 
+    }
 
     const numAmount = parseFloat(amount);
     if (isNaN(numAmount) || numAmount < 500) {
       Alert.alert("Error", "Amount must be at least PKR 500");
       return;
     }
-   
+
     if (!user) {
       Alert.alert("Error", "You must be logged in to withdraw");
       return;
@@ -273,66 +204,93 @@ const hasSubmittedInLast24Hours = item => {
 
     setSubmitting(true);
 
-    // Prepare withdrawal note
-    let withdrawalNote = `Withdrawal Request\n`;
-    withdrawalNote += `Account Holder: ${accountHolder}\n`;
-    withdrawalNote += `Method: ${selectedMethod.toUpperCase()}\n`;
-    
-    if (selectedMethod === "easypaisa" || selectedMethod === "jazzcash") {
-      withdrawalNote += `Mobile Number: ${mobileNumber}\n`;
-    } else {
-      withdrawalNote += `Bank: ${bankName}\n`;
-      withdrawalNote += `Account Number: ${bankAccountNumber}\n`;
-    }
-    withdrawalNote += `Amount: PKR ${numAmount}\n`;
-    withdrawalNote += `User: ${user.email}\n`;
-    withdrawalNote += notes ? `Additional Notes: ${notes}\n` : '';
+    try {
+      // ===============================
+      // Upload Screenshot to Firebase Storage (if provided)
+      // Only the resulting URL goes into the database record.
+      // ===============================
+      let screenshotUrl = null;
 
-    // Create order in database with screenshot URL
-    const orderData = {
-      type: getPaymentMethod(),
-      amount: numAmount,
-      accountNumber: getAccountNumber(),
-      paymentMethod: getPaymentMethod(),
-      notes: withdrawalNote,
-      isDeposit: false,
-      status: 'pending',
-      screenshot: null,
-      bpId: userProfile?.bpPassword,
-      bpPassword: userProfile?.bpUsername,
-      userName: accountHolder,
-      userEmail: userProfile?.email,
-      bankName: bankName,
-      isBankTransfer: selectedMethod === "bank" ? true : false
-    };
+      if (screenshot) {
+        const uploadResult = await uploadScreenshot(
+          screenshot.uri,
+          user.uid,
+          "withdrawal"
+        );
 
-    const result = await createOrder(user.uid, orderData);
+        if (!uploadResult.success) {
+          setSubmitting(false);
+          Alert.alert("Upload Failed", uploadResult.error);
+          return;
+        }
 
-    setSubmitting(false);
+        screenshotUrl = uploadResult.url;
+      }
 
-    if (result.success) {
-      // Show custom modal instead of Alert
-      setSuccessData({
-        orderNumber: result.order.orderNumber,
+      let withdrawalNote = `Withdrawal Request\n`;
+      withdrawalNote += `Account Holder: ${accountHolder}\n`;
+      withdrawalNote += `Method: ${selectedMethod.toUpperCase()}\n`;
+
+      if (selectedMethod === "easypaisa" || selectedMethod === "jazzcash") {
+        withdrawalNote += `Mobile Number: ${mobileNumber}\n`;
+      } else {
+        withdrawalNote += `Bank: ${bankName}\n`;
+        withdrawalNote += `Account Number: ${bankAccountNumber}\n`;
+      }
+      withdrawalNote += `Amount: PKR ${numAmount}\n`;
+      withdrawalNote += `User: ${user.email}\n`;
+      withdrawalNote += notes ? `Additional Notes: ${notes}\n` : '';
+
+      const orderData = {
+        type: getPaymentMethod(),
         amount: numAmount,
-        method: selectedMethod.toUpperCase()
-      });
-      setShowSuccessModal(true);
-    } else {
-      Alert.alert("Error", "Failed to submit withdrawal request: " + result.error);
+        accountNumber: getAccountNumber(),
+        paymentMethod: getPaymentMethod(),
+        notes: withdrawalNote,
+        screenshot: screenshotUrl, // Storage URL, not base64
+        bpId: userProfile?.bpPassword,
+        bpPassword: userProfile?.bpUsername,
+        userName: accountHolder,
+        userEmail: userProfile?.email,
+        bankName: bankName,
+        isBankTransfer: selectedMethod === "bank" ? true : false
+      };
+
+      const result = await createWithdrawal(user.uid, orderData);
+      setSubmitting(false);
+
+      if (result.success) {
+        setSuccessData({
+          orderNumber: result.order.orderNumber,
+          amount: numAmount,
+          method: selectedMethod.toUpperCase()
+        });
+        setShowSuccessModal(true);
+
+        setTimeout(() => {
+          setShowSuccessModal(false);
+          navigation.goBack();
+        }, 3000);
+      } else {
+        Alert.alert("Error", "Failed to submit withdrawal request: " + result.error);
+      }
+    } catch (error) {
+      setSubmitting(false);
+      console.error(error);
+      Alert.alert("Error", error.message || "Something went wrong. Please try again.");
     }
   };
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <KeyboardAvoidingView 
+      <KeyboardAvoidingView
         style={styles.container}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
       >
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-          <ScrollView 
-            showsVerticalScrollIndicator={false} 
+          <ScrollView
+            showsVerticalScrollIndicator={false}
             contentContainerStyle={styles.scrollContent}
             keyboardShouldPersistTaps="handled"
             automaticallyAdjustKeyboardInsets={true}
@@ -346,8 +304,8 @@ const hasSubmittedInLast24Hours = item => {
               <View style={{ width: 32 }} />
             </View>
 
-            {/* Time Info Card */}
-            {timeWithdrawal && (
+            {/* Time Info Card — only shown when activeTime is true */}
+            {timeWithdrawal && timeWithdrawal.activeTime && (
               <View style={[
                 styles.timeInfoCard,
                 !isWithdrawalAllowed() && styles.timeInfoCardWarning
@@ -381,13 +339,10 @@ const hasSubmittedInLast24Hours = item => {
 
             {/* Payment Method Selector */}
             <View style={styles.methodSection}>
-              <Text style={styles.sectionTitle}>Select Payment Method</Text>
+               <Text style={styles.sectionTitle}>Select Payment Method</Text>
               <View style={styles.methodButtons}>
                 <TouchableOpacity
-                  style={[
-                    styles.methodButton,
-                    selectedMethod === "easypaisa" && styles.methodButtonActive,
-                  ]}
+                  style={[styles.methodButton, selectedMethod === "easypaisa" && styles.methodButtonActive]}
                   onPress={() => setSelectedMethod("easypaisa")}
                 >
                   <FontAwesome5 name="mobile-alt" size={20} color={selectedMethod === "easypaisa" ? "#fff" : "#6B7280"} />
@@ -396,10 +351,7 @@ const hasSubmittedInLast24Hours = item => {
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={[
-                    styles.methodButton,
-                    selectedMethod === "jazzcash" && styles.methodButtonActive,
-                  ]}
+                  style={[styles.methodButton, selectedMethod === "jazzcash" && styles.methodButtonActive]}
                   onPress={() => setSelectedMethod("jazzcash")}
                 >
                   <FontAwesome5 name="mobile-alt" size={20} color={selectedMethod === "jazzcash" ? "#fff" : "#6B7280"} />
@@ -408,15 +360,12 @@ const hasSubmittedInLast24Hours = item => {
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={[
-                    styles.methodButton,
-                    selectedMethod === "bank" && styles.methodButtonActive,
-                  ]}
+                  style={[styles.methodButton, selectedMethod === "bank" && styles.methodButtonActive]}
                   onPress={() => setSelectedMethod("bank")}
                 >
                   <MaterialIcons name="account-balance" size={20} color={selectedMethod === "bank" ? "#fff" : "#6B7280"} />
                   <Text style={[styles.methodText, selectedMethod === "bank" && styles.methodTextActive]}>
-                    Bank 
+                    Bank
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -470,34 +419,13 @@ const hasSubmittedInLast24Hours = item => {
                 value={amount}
                 onChangeText={setAmount}
               />
-
-              {screenshot && (
-                <View style={styles.imagePreviewContainer}>
-                  <TouchableOpacity onPress={() => setShowImageModal(true)}>
-                    <Image 
-                      source={{ uri: screenshot.uri }} 
-                      style={styles.imagePreview}
-                      resizeMode="cover"
-                      onError={handleImageError}
-                    />
-                  </TouchableOpacity>
-                  {imageError && (
-                    <View style={styles.imageErrorContainer}>
-                      <Text style={styles.imageErrorText}>Failed to load image</Text>
-                    </View>
-                  )}
-                  <TouchableOpacity style={styles.removeImageButton} onPress={removeImage}>
-                    <Ionicons name="close-circle" size={24} color="#EF4444" />
-                  </TouchableOpacity>
-                </View>
-              )}
             </View>
 
             {/* Submit Button */}
-            <TouchableOpacity 
-              style={[styles.submitButton, !isWithdrawalAllowed() && styles.disabledButton]} 
-              onPress={handleSubmit} 
-              disabled={submitting}
+            <TouchableOpacity
+              style={[styles.submitButton, !isWithdrawalAllowed() && styles.disabledButton]}
+              onPress={handleSubmit}
+              disabled={submitting || !isWithdrawalAllowed()}
             >
               <LinearGradient
                 colors={!isWithdrawalAllowed() ? ['#9CA3AF', '#9CA3AF'] : ['#10B981', '#059669']}
@@ -509,13 +437,15 @@ const hasSubmittedInLast24Hours = item => {
                   <ActivityIndicator color="#fff" />
                 ) : (
                   <Text style={styles.submitText}>
-                    {!isWithdrawalAllowed() ? 'Withdrawals Currently Unavailable' : 'Submit Withdrawal Request'}
+                    {!isWithdrawalAllowed()
+                      ? 'Withdrawals Currently Unavailable'
+                      : 'Submit Withdrawal Request'}
                   </Text>
                 )}
               </LinearGradient>
             </TouchableOpacity>
 
-            {/* EasyPaisa Logo Placeholder */}
+            {/* Footer */}
             <View style={styles.logoContainer}>
               <FontAwesome5 name="mobile-alt" size={24} color="#10B981" />
               <Text style={styles.logoText}>EasyPaisa • JazzCash • Bank</Text>
@@ -531,15 +461,15 @@ const hasSubmittedInLast24Hours = item => {
         animationType="fade"
         onRequestClose={() => setShowImageModal(false)}
       >
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.modalContainer}
           activeOpacity={1}
           onPress={() => setShowImageModal(false)}
         >
           {screenshot && !imageError && (
-            <Image 
-              source={{ uri: screenshot.uri }} 
-              style={styles.modalImage} 
+            <Image
+              source={{ uri: screenshot.uri }}
+              style={styles.modalImage}
               resizeMode="contain"
               onError={handleImageError}
             />
@@ -547,23 +477,19 @@ const hasSubmittedInLast24Hours = item => {
         </TouchableOpacity>
       </Modal>
 
-      {/* Success Modal for Withdrawal */}
+      {/* Success Modal */}
       <Modal
         visible={showSuccessModal}
-        // visible={true}
         transparent={true}
         animationType="fade"
         onRequestClose={() => setShowSuccessModal(false)}
       >
         <View style={styles.successModalOverlay}>
           <View style={styles.successModalContainer}>
-            {/* Success Icon */}
             <View style={styles.successIconContainer}>
               <Ionicons name="checkmark-circle" size={70} color="#10B981" />
             </View>
-            
             <Text style={styles.successModalTitle}>Withdrawal Request Submitted!</Text>
-            
             <View style={styles.successModalDetails}>
               <View style={styles.detailRow}>
                 <Text style={styles.detailLabel}>Order Number:</Text>
@@ -578,13 +504,11 @@ const hasSubmittedInLast24Hours = item => {
                 <Text style={styles.detailValue}>{successData.method}</Text>
               </View>
             </View>
-            
             <Text style={styles.successModalMessage}>
               Funds will be transferred within 30 minutes after approval.
             </Text>
-            
             <View style={styles.successModalButtons}>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={[styles.successModalButton, styles.okButton]}
                 onPress={() => {
                   setShowSuccessModal(false);
@@ -607,17 +531,13 @@ const hasSubmittedInLast24Hours = item => {
       >
         <View style={styles.timeModalOverlay}>
           <View style={styles.timeModalContainer}>
-            {/* Warning Icon */}
             <View style={styles.timeModalIconContainer}>
               <Ionicons name="time-outline" size={70} color="#F59E0B" />
             </View>
-            
             <Text style={styles.timeModalTitle}>Withdrawal Not Available</Text>
-            
             <Text style={styles.timeModalDescription}>
               Withdrawals can only be processed during the specified time window.
             </Text>
-            
             <View style={styles.timeModalScheduleContainer}>
               <Text style={styles.timeModalScheduleLabel}>Withdrawal Hours:</Text>
               <View style={styles.timeModalScheduleBox}>
@@ -627,15 +547,13 @@ const hasSubmittedInLast24Hours = item => {
                 </Text>
               </View>
             </View>
-            
             <View style={styles.timeModalInfoContainer}>
               <Ionicons name="information-circle" size={18} color="#6B7280" />
               <Text style={styles.timeModalInfoText}>
                 Please try again during the allowed withdrawal hours.
               </Text>
             </View>
-            
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.timeModalButton}
               onPress={() => setShowTimeRestrictionModal(false)}
             >
@@ -930,7 +848,7 @@ const styles = StyleSheet.create({
     color: '#1F2937',
     textAlign: 'center',
     marginBottom: 20,
-    paddingHorizontal:4
+    paddingHorizontal: 4
   },
   successModalDetails: {
     backgroundColor: '#F9FAFB',
@@ -971,14 +889,6 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 10,
     alignItems: 'center',
-  },
-  viewOrdersButton: {
-    backgroundColor: '#10B981',
-  },
-  viewOrdersButtonText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '600',
   },
   okButton: {
     backgroundColor: '#10B981',
