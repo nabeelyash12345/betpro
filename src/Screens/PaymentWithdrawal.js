@@ -69,6 +69,7 @@ export default function PaymentWithdrawal({ navigation }) {
   }, []);
 
   const timeWithdrawal = withdrawaltime?.find(item => item?.url) || null;
+  console.log(timeWithdrawal)
 
   // Helper function to check if withdrawal is allowed based on activeTime flag and time window
   const isWithdrawalAllowed = () => {
@@ -308,7 +309,7 @@ export default function PaymentWithdrawal({ navigation }) {
             {timeWithdrawal && timeWithdrawal.activeTime && (
               <View style={[
                 styles.timeInfoCard,
-                !isWithdrawalAllowed() && styles.timeInfoCardWarning
+                isWithdrawalAllowed() && styles.timeInfoCardWarning
               ]}>
                 <View style={styles.timeInfoHeader}>
                   <Ionicons name="time-outline" size={20} color={!isWithdrawalAllowed() ? "#EF4444" : "#10B981"} />
@@ -319,7 +320,7 @@ export default function PaymentWithdrawal({ navigation }) {
                 <Text style={styles.timeInfoText}>
                   {timeWithdrawal.fromtime} - {timeWithdrawal.toTime}
                 </Text>
-                {!isWithdrawalAllowed() ? (
+                {isWithdrawalAllowed() ? (
                   <View style={styles.timeWarningContainer}>
                     <Ionicons name="alert-circle" size={16} color="#EF4444" />
                     <Text style={styles.timeWarningText}>

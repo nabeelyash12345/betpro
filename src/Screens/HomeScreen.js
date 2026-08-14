@@ -233,7 +233,7 @@ export default function HomeScreen({ navigation }) {
         >
           <View style={styles.headerstyles}>
             <View>
-              <Text style={styles.headertext}>Bprolive Official</Text>
+              <Text style={styles.headertext}>BetPro Exchange</Text>
             </View>
             <TouchableOpacity style={styles.logoutBtn} onPress={openMenu}>
               <Entypo name="log-out" size={20} color="black" />
@@ -257,7 +257,7 @@ export default function HomeScreen({ navigation }) {
                   style={{ height: 40, width: 40 }}
                 />
               </View>
-              <Text style={styles.title}>Bprolive Official</Text>
+              <Text style={styles.title}>BetPro Exchange</Text>
             </View>
 
             {/* Username */}

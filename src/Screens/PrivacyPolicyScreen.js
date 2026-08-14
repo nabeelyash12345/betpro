@@ -29,7 +29,7 @@ const PrivacyPolicyScreen = ({ navigation }) => {
         
         <Text style={styles.sectionTitle}>Overview</Text>
         <Text style={styles.text}>
-          Bprolive uses the device camera and media library to allow users to take
+          BetPro Exchange uses the device camera and media library to allow users to take
           photos or select images from their device.
         </Text>
 

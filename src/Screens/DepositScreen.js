@@ -25,7 +25,7 @@ import { useAuth } from "../context/AuthContext";
 import { createDeposit } from "../services/Depositservice";
 import * as Clipboard from 'expo-clipboard';
 import { getAllBanks } from "../services/PaymentDetails";
-import { uploadScreenshot } from "../services/Uploadscreenshot";
+
 
 
 const { width } = Dimensions.get('window');
@@ -105,42 +105,35 @@ export default function DepositScreen({ navigation }) {
     setCopiedText(text);
   };
 
-  // Request permission and pick image
  const pickImage = async () => {
-  try {
-    // Request permission
-    const { status } =
-      await ImagePicker.requestMediaLibraryPermissionsAsync();
-
-    if (status !== "granted") {
-      Alert.alert(
-        "Permission Needed",
-        "Sorry, we need camera roll permissions to upload screenshots!"
-      );
-      return;
-    }
-
-    // Launch image picker
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      quality: 0.6,
-      allowsEditing: false,
-    });
-
-    if (!result.canceled && result.assets?.length > 0) {
-      setScreenshot({
-        uri: result.assets[0].uri,
+    try {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission Needed', 'Sorry, we need camera roll permissions to upload screenshots!');
+        return;
+      }
+      let result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        quality: 0.2,
+        allowsEditing: false,
+        base64: true,
       });
-
-      setImageError(false);
-    } else {
-      console.log("Image selection cancelled");
+      if (!result.canceled && result.assets && result.assets[0]) {
+        const imageUri = result.assets[0].uri;
+        const base64Data = result.assets[0].base64;
+        const dataUrl = base64Data ? `data:image/jpeg;base64,${base64Data}` : null;
+        setScreenshot({
+          uri: imageUri,
+          dataUrl: dataUrl,
+          base64: base64Data
+        });
+        setImageError(false);
+      }
+    } catch (error) {
+      console.error('Error picking image:', error);
+      Alert.alert('Error', 'Failed to pick image: ' + error.message);
     }
-  } catch (error) {
-    console.error("Error picking image:", error);
-    Alert.alert("Error", "Failed to pick image: " + error.message);
-  }
-};
+  };
 
   // Remove selected image
   const removeImage = () => {
@@ -182,7 +175,7 @@ export default function DepositScreen({ navigation }) {
     }
   };
 
- const handleSubmit = async () => {
+const handleSubmit = async () => {
   // Validation
   if (!accountHolder.trim()) {
     Alert.alert("Error", "Please enter account holder name");
@@ -216,30 +209,6 @@ export default function DepositScreen({ navigation }) {
   setSubmitting(true);
 
   try {
-    // ===============================
-    // Upload Screenshot to Firebase Storage
-    // (stores only the URL in the database, not the raw image data —
-    // keeps each record small and avoids large repeated downloads)
-    // ===============================
-    let screenshotUrl = "";
-
-    const uploadResult = await uploadScreenshot(
-      screenshot.uri,
-      user.uid,
-      "deposit"
-    );
-
-    if (!uploadResult.success) {
-      setSubmitting(false);
-      Alert.alert("Upload Failed", uploadResult.error);
-      return;
-    }
-
-    screenshotUrl = uploadResult.url;
-
-    // ===============================
-    // Create Deposit Order
-    // ===============================
     const orderData = {
       type: getPaymentMethod(),
       amount: numAmount,
@@ -247,8 +216,8 @@ export default function DepositScreen({ navigation }) {
       paymentMethod: getPaymentMethod(),
       notes: notes || "",
 
-      // Firebase Storage URL
-      screenshot: screenshotUrl,
+      // Save local image URI
+     screenshot: screenshot ? screenshot.dataUrl : null,
 
       bpId: userProfile?.bpPassword,
       bpPassword: userProfile?.bpUsername,
@@ -261,7 +230,6 @@ export default function DepositScreen({ navigation }) {
     setSubmitting(false);
 
     if (result.success) {
-      // Reset Form
       setAmount("");
       setNotes("");
       setScreenshot(null);
@@ -281,7 +249,6 @@ export default function DepositScreen({ navigation }) {
     }
   } catch (error) {
     setSubmitting(false);
-    console.log(error);
 
     Alert.alert(
       "Error",
